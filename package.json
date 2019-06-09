@@ -1,0 +1,17 @@
+{
+  "name": "actioner",
+  "version": "0.1.0",
+  "description": "Consumes RabbitWQ and call actions with docker",
+  "main": "consume.js",
+  "dependencies": {
+    "amqplib": "^0.5.3",
+    "rimraf": "^2.6.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT"
+}
