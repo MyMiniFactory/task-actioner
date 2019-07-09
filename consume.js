@@ -22,9 +22,10 @@ amqp.connect('amqp://localhost', function(error0, connection) {
         console.log(" [*] Waiting for messages in %s. To exit press CTRL+C", queue);
 
         channel.consume(queue, function(msg) {
-            console.log(" [x] Received %s", msg.content.toString());
+            const payload = JSON.parse(msg.content);
+            console.log(" [x] Received %s", payload);
 
-            actioner.run(msg.content, () => {
+            actioner.run(payload, () => {
               console.log('action done');
             });
 

@@ -1,74 +1,92 @@
 #!/usr/bin/env node
 
-const util = require('util');
-const http = require('https');
-const fs = require('fs');
+const path = require('path');
 const rimraf = require("rimraf");
-const exec = util.promisify(require('child_process').exec);
+const minio = require('minio');
+const mime = require('mime');
 
-const payload = require('./payload-example.json')
+require('dotenv').config();
 
-async function shell(command) {
-  console.log('Running: "' + command + '"');
-  const { stdout, stderr } = await exec(command);
-  console.log('stdout:', stdout);
-  console.log('stderr:', stderr);
+const appDir = path.dirname(require.main.filename);
+
+const minioClient = new minio.Client({
+    endPoint: process.env.FILE_STORAGE_HOST,
+    port: Number(process.env.FILE_STORAGE_PORT),
+    useSSL: (process.env.FILE_STORAGE_USE_SSL === 'true'),
+    accessKey: process.env.FILE_STORAGE_ACCESS_KEY,
+    secretKey: process.env.FILE_STORAGE_SECRET_KEY
+});
+
+function getFile(bucketName, objectName) {
+    randomNumber = Math.floor(Math.random() * Math.floor(100000));
+    filePath = appDir + '/tmp/' + randomNumber.toString() + objectName;
+
+    return new Promise((resolve, reject) => {
+        minioClient.fGetObject(bucketName, objectName, filePath, (err) => {
+            if (err) {
+                console.log(err);
+                reject(err);
+            }
+            console.log('success');
+            resolve(filePath);
+        });
+
+    });
 }
 
-function download(url, filename){
-  const file = fs.createWriteStream(filename);
-  const request = http.get(url, function(response) {
-    response.pipe(file);
-  });
+function putFile(bucketName, objectName, filePath) {
+    const metaData = {
+        'Content-Type': mime.getType((path.extname(filePath).substr(1))),
+        'Content-Language': 'en-US',
+        'X-Amz-Meta-Testing': 1234,
+        'example': 5678
+    };
+    return new Promise((resolve, reject) => {
+        minioClient.fPutObject(bucketName, objectName, filePath, metaData, (err, etag) => {
+            if (err) {
+                reject(err);
+            }
+
+            resolve(etag);
+        })
+    });
 }
 
-async function ensureDir (dirpath) {
-  try {
-    await fs.mkdir(dirpath, { recursive: true })
-  } catch (err) {
-    if (err.code !== 'EEXIST') throw err
-  }
+async function triggerAction (actionName, files) {
+    const action = require(appDir + '/actions/' + actionName + '/main');
+    resultingFiles = await action.run(files);
+
+    return resultingFiles;
 }
 
-async function main(payload, done){
+async function main(taskPayload){
+    let actionPayload = [];
 
-  // create temporary folder
-  const tmpFolder = __dirname + '/tmp';
-  // TODO replace in async
-  fs.existsSync(tmpFolder) || fs.mkdirSync(tmpFolder);
-  // Download the files
-  payload.files.forEach((file) => {
-    download(file.url, tmpFolder + '/' + file.name)
-  })
+    const promises = taskPayload.files.map(async (file) => {
+        let fileLocation = await getFile(file.bucketName, file.objectName);
+        actionPayload.push({location: fileLocation});
+    });
 
-  if(payload.action === 'zip'){
-    shell('docker run --rm zipper \
-    -v ' + tmpFolder + ':/files \
-    zipper "$@" \
-    ' + payload.args.join(' ')
-    )
-    .then(() => {
+    await Promise.all(promises);
 
-      // TODO Upload new files (or let the action to it?)
+    const resultingFiles = await triggerAction(taskPayload.action, actionPayload);
 
-      //  delete the temporary folder
-      rimraf(tmpFolder, () => {
-        done();
-        console.log("done");
-      });
-    })
-    .catch((err) => {
-      console.log(err);
-      //  delete the temporary folder
-      rimraf(tmpFolder, () => {
-        done();
-        console.log("done");
-      });
-     });
-  }
+    const randomNumber = Math.floor(Math.random() * Math.floor(100000));
+
+    const promisesBis = resultingFiles.map(async (file) => {
+        const filename = `${randomNumber}/${file.name}`;
+        console.log(filename);
+        putFile('object', filename, file.location);
+    });
+
+    await Promise.all(promisesBis);
+
+    console.log('We clean the tmp folder');
+
+    rimraf(appDir + '/tmp/*', () => {
+        console.log('tmp folder cleaned');
+    });
 
 }
-
-main(payload)
 
 module.exports.run = main
