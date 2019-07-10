@@ -54,7 +54,7 @@ function putFile(bucketName, objectName, filePath) {
 
 async function triggerAction (actionName, files) {
     const action = require(appDir + '/actions/' + actionName + '/main');
-    resultingFiles = await action.run(files);
+    const resultingFiles = await action.run(files);
 
     return resultingFiles;
 }
@@ -63,7 +63,7 @@ async function main(taskPayload){
     let actionPayload = [];
 
     const promises = taskPayload.files.map(async (file) => {
-        let fileLocation = await getFile(file.bucketName, file.objectName);
+        const fileLocation = await getFile(file.bucketName, file.objectName);
         actionPayload.push({location: fileLocation});
     });
 
