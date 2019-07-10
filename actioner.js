@@ -18,8 +18,8 @@ const minioClient = new minio.Client({
 });
 
 function getFile(bucketName, objectName) {
-    randomNumber = Math.floor(Math.random() * Math.floor(100000));
-    filePath = appDir + '/tmp/' + randomNumber.toString() + objectName;
+    const randomNumber = Math.floor(Math.random() * Math.floor(100000));
+    const filePath = appDir + '/tmp/' + randomNumber.toString() + objectName;
 
     return new Promise((resolve, reject) => {
         minioClient.fGetObject(bucketName, objectName, filePath, (err) => {
