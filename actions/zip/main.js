@@ -5,14 +5,12 @@ const path = require('path');
 const appDir = path.dirname(require.main.filename);
 
 async function shell(command) {
-  console.log('Running: "' + command + '"');
   const { stdout, stderr } = await exec(command);
   console.log('stdout:', stdout);
   console.error('stderr:', stderr);
 }
 
 async function main (payload) {
-    console.log('Zip action received: ', payload);
     const randomNumber = Math.floor(Math.random() * Math.floor(100000));
     const compressedFile = '/tmp/' + randomNumber + '.zip';
 
