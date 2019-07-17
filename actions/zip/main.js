@@ -8,7 +8,7 @@ async function shell(command) {
   console.log('Running: "' + command + '"');
   const { stdout, stderr } = await exec(command);
   console.log('stdout:', stdout);
-  console.log('stderr:', stderr);
+  console.error('stderr:', stderr);
 }
 
 async function main (payload) {

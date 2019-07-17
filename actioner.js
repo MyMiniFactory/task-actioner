@@ -24,10 +24,9 @@ function getFile(bucketName, objectName) {
     return new Promise((resolve, reject) => {
         minioClient.fGetObject(bucketName, objectName, filePath, (err) => {
             if (err) {
-                console.log(err);
+                console.error(err);
                 reject(err);
             }
-            console.log('success');
             resolve(filePath);
         });
 
@@ -81,10 +80,11 @@ async function main(taskPayload){
 
     await Promise.all(promisesBis);
 
-    console.log('We clean the tmp folder');
-
-    rimraf(appDir + '/tmp/*', () => {
-        console.log('tmp folder cleaned');
+    rimraf(appDir + '/tmp/*', (err) => {
+        if (err) {
+            console.error("Error: ", err);
+        }
+        console.log("done");
     });
 
 }
