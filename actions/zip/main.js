@@ -27,9 +27,7 @@ async function main (payload) {
         + payload.map(file => file.location.slice(appDir.length)).join(' ')
     );
 
-    console.log(appDir + compressedFile);
-
-    return [{location: appDir + compressedFile, name: randomNumber + '.zip'}];
+    return JSON.stringify([{location: appDir + compressedFile, name: randomNumber + '.zip'}]);
 };
 
 module.exports.run = main

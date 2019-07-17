@@ -36,7 +36,7 @@ async function main(payload) {
     // Flatten the resultingFiles array
     flattenedFiles = resultingFiles.reduce((acc, current) => acc.concat(current), []);
 
-    return flattenedFiles;
+    return JSON.stringify(flattenedFiles);
 }
 
 module.exports.run = main

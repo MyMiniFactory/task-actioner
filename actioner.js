@@ -53,6 +53,7 @@ function putFile(bucketName, objectName, filePath) {
 
 async function triggerAction (actionName, files) {
     const action = require(appDir + '/actions/' + actionName + '/main');
+    const payloadAction = JSON.stringify(files);
     const resultingFiles = await action.run(files);
 
     return resultingFiles;
@@ -72,9 +73,8 @@ async function main(taskPayload){
 
     const randomNumber = Math.floor(Math.random() * Math.floor(100000));
 
-    const promisesBis = resultingFiles.map(async (file) => {
+    const promisesBis = (JSON.parse(resultingFiles)).map(async (file) => {
         const filename = `${randomNumber}/${file.name}`;
-        console.log(filename);
         putFile('object', filename, file.location);
     });
 
