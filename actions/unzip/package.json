@@ -1,0 +1,17 @@
+{
+  "name": "mmf-unzip",
+  "version": "0.1.0",
+  "description": "Unzip files",
+  "main": "main.js",
+  "dependencies": {
+    "decompress": "^4.2.0",
+    "decompress-unzip": "^4.0.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT"
+}

@@ -1,92 +1,147 @@
 #!/usr/bin/env node
 
-const path = require('path');
-const rimraf = require("rimraf");
-const minio = require('minio');
+'use strict';
+
+const util = require('util');
+const dotenv = require('dotenv');
+const fs = require('fs');
 const mime = require('mime');
+const minio = require('minio');
+const path = require('path');
+const rimraf = require('rimraf');
+const uniqueString = require('unique-string');
 
-require('dotenv').config();
-
+const env = dotenv.config().parsed;
 const appDir = path.dirname(require.main.filename);
+const exec = util.promisify(require('child_process').exec);
 
 const minioClient = new minio.Client({
-    endPoint: process.env.FILE_STORAGE_HOST,
-    port: Number(process.env.FILE_STORAGE_PORT),
-    useSSL: (process.env.FILE_STORAGE_USE_SSL === 'true'),
-    accessKey: process.env.FILE_STORAGE_ACCESS_KEY,
-    secretKey: process.env.FILE_STORAGE_SECRET_KEY
+    endPoint: env.FILE_STORAGE_HOST,
+    port: Number(env.FILE_STORAGE_PORT),
+    useSSL: ('true' === env.FILE_STORAGE_USE_SSL),
+    accessKey: env.FILE_STORAGE_ACCESS_KEY,
+    secretKey: env.FILE_STORAGE_SECRET_KEY
 });
 
-function getFile(bucketName, objectName) {
-    const randomNumber = Math.floor(Math.random() * Math.floor(100000));
-    const filePath = appDir + '/tmp/' + randomNumber.toString() + objectName;
+async function createWorkspace(randomString) {
+    const workspace = appDir + '/tmp/' + randomString;
+    await fs.promises.mkdir(workspace + '/input', { recursive: true });
+    await fs.promises.mkdir(workspace + '/output', {});
 
+    return workspace;
+}
+
+function getActionType(action) {
     return new Promise((resolve, reject) => {
-        minioClient.fGetObject(bucketName, objectName, filePath, (err) => {
+        fs.readFile(appDir + '/actions.json', (err, data) => {
             if (err) {
-                console.error(err);
                 reject(err);
             }
-            resolve(filePath);
+            const actionListParsed = JSON.parse(data);
+            resolve(actionListParsed[action].type);
         });
-
     });
 }
 
-function putFile(bucketName, objectName, filePath) {
-    const metaData = {
-        'Content-Type': mime.getType((path.extname(filePath).substr(1))),
-        'Content-Language': 'en-US',
-        'X-Amz-Meta-Testing': 1234,
-        'example': 5678
-    };
-    return new Promise((resolve, reject) => {
-        minioClient.fPutObject(bucketName, objectName, filePath, metaData, (err, etag) => {
+function downloadFilesFromS3ToWorkspace(client, files, workspace) {
+    const downloads = files.map(file => new Promise((resolve, reject) => {
+        const ext = file.objectName.substring(file.objectName.lastIndexOf('.')+1, file.objectName.length) || file.objectName;
+        const filePath = workspace + '/input/' + uniqueString() + '.' + ext;
+        client.fGetObject(file.bucketName, file.objectName, filePath, (err) => {
             if (err) {
+                console.log('Error while downloading a file');
                 reject(err);
             }
+            console.log('download ', file.objectName, ' into ', filePath);
+            resolve();
+        });
+    }));
 
-            resolve(etag);
-        })
-    });
+    return Promise.all(downloads);
 }
 
-async function triggerAction (actionName, files) {
-    const action = require(appDir + '/actions/' + actionName + '/main');
-    const payloadAction = JSON.stringify(files);
-    const resultingFiles = await action.run(files);
+async function shell(command) {
+    const { stdout, stderr } = await exec(command);
+    console.log('stdout:', stdout);
+    console.error('stderr:', stderr);
+}
 
-    return resultingFiles;
+async function triggerDockerAction(actionName, args, workspace) {
+    await shell(
+        'docker run --rm -v '
+        + workspace
+        + ':/app/files '
+        + actionName
+        + ' '
+        + args.join(' ')
+    );
+}
+
+async function triggerNativeAction(actionName, args, workspace) {
+    console.log(actionName);
+    const action = require(actionName);
+    await action.run(args, workspace);
+}
+
+function uploadFilesFromWorkspaceToS3(client, workspace, s3Location) {
+    return new Promise((resolve, reject) => {
+        fs.readdir(workspace + '/output', {}, (err, files) => {
+            if (err) reject(err);
+
+            files.map(file => {
+                const ext = file.substring(file.lastIndexOf('.')+1, file.length) || file;
+                const objectName = s3Location.keyPrefix + '/' + uniqueString() + '.' + ext;
+                const filePath =  workspace + '/output/' + file;
+                const metaData = {
+                    'Content-Type': mime.getType(ext),
+                    'Content-Language': 'en-US',
+                    'X-Amz-Meta-Testing': 1234,
+                    'example': 5678
+                };
+                client.fPutObject(s3Location.bucketName, objectName, filePath, metaData, (fileErr, etag) => {
+                    if (fileErr) reject(fileErr); 
+                    console.log('upload ', filePath, ' to ', objectName);
+                });
+            });
+            resolve();
+        });
+    });
 }
 
 async function main(taskPayload){
-    let actionPayload = [];
+    // Create temporary work folder
+    const randomString = uniqueString();
+    let workspace;
+    try {
+        workspace = await createWorkspace(randomString);
+    } catch (e) {
+        console.log(e);
+    }
 
-    const promises = taskPayload.files.map(async (file) => {
-        const fileLocation = await getFile(file.bucketName, file.objectName);
-        actionPayload.push({location: fileLocation});
-    });
+    const actionName = taskPayload.action;
 
-    await Promise.all(promises);
+    const actionType = await getActionType(actionName);
 
-    const resultingFiles = await triggerAction(taskPayload.action, actionPayload);
+    // Get files from file storage service
+    await downloadFilesFromS3ToWorkspace(minioClient, taskPayload.files, workspace);
 
-    const randomNumber = Math.floor(Math.random() * Math.floor(100000));
+    if ('native' === actionType) {
+        await triggerNativeAction(actionName, taskPayload.args, workspace, );
+    } else {
+        await triggerDockerAction(actionName, taskPayload.args, workspace);
+    }
 
-    const promisesBis = (JSON.parse(resultingFiles)).map(async (file) => {
-        const filename = `${randomNumber}/${file.name}`;
-        putFile('object', filename, file.location);
-    });
+    await uploadFilesFromWorkspaceToS3(minioClient, workspace, taskPayload.s3Location);
 
-    await Promise.all(promisesBis);
-
-    rimraf(appDir + '/tmp/*', (err) => {
+    rimraf(workspace, (err) => {
         if (err) {
-            console.error("Error: ", err);
+            console.error('Error: ', err);
         }
-        console.log("done");
+        console.log('done');
     });
 
 }
-
-module.exports.run = main
+ 
+module.exports.run = main;
+module.exports.createWorkspace = createWorkspace;
+module.exports.getActionType = getActionType;

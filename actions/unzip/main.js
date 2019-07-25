@@ -1,42 +1,34 @@
 #!/usr/bin/env node
 
+'use strict';
+
 const decompress = require('decompress');
 const decompressUnzip = require('decompress-unzip');
 const path = require('path');
-
-const appDir = path.dirname(require.main.filename);
+const fs = require('fs');
 
 const supportedExtensions = ['stl', 'scad', 'blend', 'pdf', 'obj', 'sdf', 'mtl', '3mf', 'jpeg', 'step', 'skp', 'zip', 'thing', 'zup', 'amf', 'fcstd', 'f3d', 'bmp', 'glb', 'gltf', 'jpg', 'png'];
 
-async function main(payload) {
-    randomNumber = Math.floor(Math.random() * Math.floor(100000));
+async function main(args, workspace) {
+    const files = await new Promise((resolve, reject) => {
+        fs.readdir(workspace + '/input', {}, (err, files) => {
+            if (err) reject(err);
 
-    const promises = payload.map(async (file) => {
-        // Unizp it
-        files = await decompress(file.location, appDir + '/tmp/' + randomNumber + '/', {
+            resolve(files);
+        });
+    });
+
+    const promises = files.map((file) => {
+        return decompress(workspace + '/input/' + file, workspace + '/output', {
             strip: 1,
             filter: file => supportedExtensions.includes((path.extname(file.path).substr(1))),
             plugins: [
                 decompressUnzip()
             ]
         });
-
-        decompressedFiles = files.map(file => {
-            return {
-                location: appDir + '/tmp/' + randomNumber + '/' + file.path,
-                name: file.path
-            };
-        });
-
-        return decompressedFiles;
     });
 
-    const resultingFiles = await Promise.all(promises);
-
-    // Flatten the resultingFiles array
-    flattenedFiles = resultingFiles.reduce((acc, current) => acc.concat(current), []);
-
-    return JSON.stringify(flattenedFiles);
+    await Promise.all(promises);
 }
 
-module.exports.run = main
+module.exports.run = main;
