@@ -100,7 +100,7 @@ function uploadFilesFromWorkspaceToS3(client, workspace, s3Location) {
                 };
                 client.fPutObject(s3Location.bucketName, objectName, filePath, metaData, (fileErr, etag) => {
                     if (fileErr) reject(fileErr); 
-                    console.log('upload ', filePath, ' to ', objectName);
+                    console.log('upload ', filePath, ' to ', objectName, ' etag: ', etag);
                 });
             });
             resolve();
