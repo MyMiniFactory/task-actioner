@@ -5,7 +5,10 @@ const fs = require('fs');
 test('it creates a workspace with input and output folder', () => {
     const randomString = uniqueString();
     return actioner.createWorkspace(randomString).then(workspace => {
-        expect(fs.lstatSync(workspace + '/input').isDirectory() && fs.lstatSync(workspace + '/output').isDirectory()).toBe(true);
+        expect(
+            fs.lstatSync(workspace + '/input').isDirectory() &&
+                fs.lstatSync(workspace + '/output').isDirectory()
+        ).toBe(true);
     });
 });
 

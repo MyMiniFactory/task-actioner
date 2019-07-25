@@ -7,7 +7,30 @@ const decompressUnzip = require('decompress-unzip');
 const path = require('path');
 const fs = require('fs');
 
-const supportedExtensions = ['stl', 'scad', 'blend', 'pdf', 'obj', 'sdf', 'mtl', '3mf', 'jpeg', 'step', 'skp', 'zip', 'thing', 'zup', 'amf', 'fcstd', 'f3d', 'bmp', 'glb', 'gltf', 'jpg', 'png'];
+const supportedExtensions = [
+    'stl',
+    'scad',
+    'blend',
+    'pdf',
+    'obj',
+    'sdf',
+    'mtl',
+    '3mf',
+    'jpeg',
+    'step',
+    'skp',
+    'zip',
+    'thing',
+    'zup',
+    'amf',
+    'fcstd',
+    'f3d',
+    'bmp',
+    'glb',
+    'gltf',
+    'jpg',
+    'png'
+];
 
 async function main(args, workspace) {
     const files = await new Promise((resolve, reject) => {
@@ -18,13 +41,12 @@ async function main(args, workspace) {
         });
     });
 
-    const promises = files.map((file) => {
+    const promises = files.map(file => {
         return decompress(workspace + '/input/' + file, workspace + '/output', {
             strip: 1,
-            filter: file => supportedExtensions.includes((path.extname(file.path).substr(1))),
-            plugins: [
-                decompressUnzip()
-            ]
+            filter: file =>
+                supportedExtensions.includes(path.extname(file.path).substr(1)),
+            plugins: [decompressUnzip()]
         });
     });
 

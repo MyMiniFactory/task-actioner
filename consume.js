@@ -21,17 +21,23 @@ amqp.connect('amqp://localhost', function(error0, connection) {
             durable: false
         });
 
-        console.log(' [*] Waiting for messages in %s. To exit press CTRL+C', queue);
+        console.log(
+            ' [*] Waiting for messages in %s. To exit press CTRL+C',
+            queue
+        );
 
-        channel.consume(queue, function(msg) {
-            console.log(' [x] Received %s', msg.content);
-            const payload = JSON.parse(msg.content);
-            actioner.run(payload, () => {
-                console.log('action done');
-            });
-
-        }, {
-            noAck: true
-        });
+        channel.consume(
+            queue,
+            function(msg) {
+                console.log(' [x] Received %s', msg.content);
+                const payload = JSON.parse(msg.content);
+                actioner.run(payload, () => {
+                    console.log('action done');
+                });
+            },
+            {
+                noAck: true
+            }
+        );
     });
 });

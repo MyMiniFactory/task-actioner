@@ -18,7 +18,7 @@ const exec = util.promisify(require('child_process').exec);
 const minioClient = new minio.Client({
     endPoint: env.FILE_STORAGE_HOST,
     port: Number(env.FILE_STORAGE_PORT),
-    useSSL: ('true' === env.FILE_STORAGE_USE_SSL),
+    useSSL: 'true' === env.FILE_STORAGE_USE_SSL,
     accessKey: env.FILE_STORAGE_ACCESS_KEY,
     secretKey: env.FILE_STORAGE_SECRET_KEY
 });
@@ -44,18 +44,36 @@ function getActionType(action) {
 }
 
 function downloadFilesFromS3ToWorkspace(client, files, workspace) {
-    const downloads = files.map(file => new Promise((resolve, reject) => {
-        const ext = file.objectName.substring(file.objectName.lastIndexOf('.')+1, file.objectName.length) || file.objectName;
-        const filePath = workspace + '/input/' + uniqueString() + '.' + ext;
-        client.fGetObject(file.bucketName, file.objectName, filePath, (err) => {
-            if (err) {
-                console.log('Error while downloading a file');
-                reject(err);
-            }
-            console.log('download ', file.objectName, ' into ', filePath);
-            resolve();
-        });
-    }));
+    const downloads = files.map(
+        file =>
+            new Promise((resolve, reject) => {
+                const ext =
+                    file.objectName.substring(
+                        file.objectName.lastIndexOf('.') + 1,
+                        file.objectName.length
+                    ) || file.objectName;
+                const filePath =
+                    workspace + '/input/' + uniqueString() + '.' + ext;
+                client.fGetObject(
+                    file.bucketName,
+                    file.objectName,
+                    filePath,
+                    err => {
+                        if (err) {
+                            console.log('Error while downloading a file');
+                            reject(err);
+                        }
+                        console.log(
+                            'download ',
+                            file.objectName,
+                            ' into ',
+                            filePath
+                        );
+                        resolve();
+                    }
+                );
+            })
+    );
 
     return Promise.all(downloads);
 }
@@ -68,12 +86,12 @@ async function shell(command) {
 
 async function triggerDockerAction(actionName, args, workspace) {
     await shell(
-        'docker run --rm -v '
-        + workspace
-        + ':/app/files '
-        + actionName
-        + ' '
-        + args.join(' ')
+        'docker run --rm -v ' +
+            workspace +
+            ':/app/files ' +
+            actionName +
+            ' ' +
+            args.join(' ')
     );
 }
 
@@ -89,26 +107,42 @@ function uploadFilesFromWorkspaceToS3(client, workspace, s3Location) {
             if (err) reject(err);
 
             files.map(file => {
-                const ext = file.substring(file.lastIndexOf('.')+1, file.length) || file;
-                const objectName = s3Location.keyPrefix + '/' + uniqueString() + '.' + ext;
-                const filePath =  workspace + '/output/' + file;
+                const ext =
+                    file.substring(file.lastIndexOf('.') + 1, file.length) ||
+                    file;
+                const objectName =
+                    s3Location.keyPrefix + '/' + uniqueString() + '.' + ext;
+                const filePath = workspace + '/output/' + file;
                 const metaData = {
                     'Content-Type': mime.getType(ext),
                     'Content-Language': 'en-US',
                     'X-Amz-Meta-Testing': 1234,
-                    'example': 5678
+                    example: 5678
                 };
-                client.fPutObject(s3Location.bucketName, objectName, filePath, metaData, (fileErr, etag) => {
-                    if (fileErr) reject(fileErr); 
-                    console.log('upload ', filePath, ' to ', objectName, ' etag: ', etag);
-                });
+                client.fPutObject(
+                    s3Location.bucketName,
+                    objectName,
+                    filePath,
+                    metaData,
+                    (fileErr, etag) => {
+                        if (fileErr) reject(fileErr);
+                        console.log(
+                            'upload ',
+                            filePath,
+                            ' to ',
+                            objectName,
+                            ' etag: ',
+                            etag
+                        );
+                    }
+                );
             });
             resolve();
         });
     });
 }
 
-async function main(taskPayload){
+async function main(taskPayload) {
     // Create temporary work folder
     const randomString = uniqueString();
     let workspace;
@@ -123,25 +157,32 @@ async function main(taskPayload){
     const actionType = await getActionType(actionName);
 
     // Get files from file storage service
-    await downloadFilesFromS3ToWorkspace(minioClient, taskPayload.files, workspace);
+    await downloadFilesFromS3ToWorkspace(
+        minioClient,
+        taskPayload.files,
+        workspace
+    );
 
     if ('native' === actionType) {
-        await triggerNativeAction(actionName, taskPayload.args, workspace, );
+        await triggerNativeAction(actionName, taskPayload.args, workspace);
     } else {
         await triggerDockerAction(actionName, taskPayload.args, workspace);
     }
 
-    await uploadFilesFromWorkspaceToS3(minioClient, workspace, taskPayload.s3Location);
+    await uploadFilesFromWorkspaceToS3(
+        minioClient,
+        workspace,
+        taskPayload.s3Location
+    );
 
-    rimraf(workspace, (err) => {
+    rimraf(workspace, err => {
         if (err) {
             console.error('Error: ', err);
         }
         console.log('done');
     });
-
 }
- 
+
 module.exports.run = main;
 module.exports.createWorkspace = createWorkspace;
 module.exports.getActionType = getActionType;
