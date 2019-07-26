@@ -22,5 +22,5 @@ matrix:
         - GID=1000
         - UNAME=travis_worker
       script:
-        - "npm run lint"
+        - "npm run lint ."
         - "npm test"
