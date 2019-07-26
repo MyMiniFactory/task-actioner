@@ -8,6 +8,7 @@
     "globals": {
         "Atomics": "readonly",
         "module": true,
+        "process": true,
         "Promise": true,
         "SharedArrayBuffer": "readonly"
     },

@@ -9,16 +9,17 @@ const path = require('path');
 const rimraf = require('rimraf');
 const uniqueString = require('unique-string');
 
-const env = dotenv.config().parsed;
+dotenv.config();
+
 const appDir = path.dirname(require.main.filename);
 const exec = util.promisify(require('child_process').exec);
 
 const minioClient = new minio.Client({
-    endPoint: env.FILE_STORAGE_HOST,
-    port: Number(env.FILE_STORAGE_PORT),
-    useSSL: 'true' === env.FILE_STORAGE_USE_SSL,
-    accessKey: env.FILE_STORAGE_ACCESS_KEY,
-    secretKey: env.FILE_STORAGE_SECRET_KEY
+    endPoint: process.env.FILE_STORAGE_HOST,
+    port: Number(process.env.FILE_STORAGE_PORT),
+    useSSL: 'true' === process.env.FILE_STORAGE_USE_SSL,
+    accessKey: process.env.FILE_STORAGE_ACCESS_KEY,
+    secretKey: process.env.FILE_STORAGE_SECRET_KEY
 });
 
 async function createWorkspace(randomString) {
