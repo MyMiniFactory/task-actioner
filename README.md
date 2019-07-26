@@ -1,4 +1,7 @@
-# Consumer example
+# Task Actioner
+[![Build Status](https://travis-ci.org/MyMiniFactory/task-actioner.svg?branch=master)](https://travis-ci.org/MyMiniFactory/task-actioner)
+
+Task Actioner is a RabbitMQ comsumer that receives task messages and runs them as native or docker actions
 
 ## Consumer role
 
@@ -17,7 +20,7 @@ if it's a docker container:
 
 ## TODO
 
-- [ ] Plug the consumer to rabbitMQ
+- [x] Plug the consumer to rabbitMQ
 - [ ] Build docker image if it doesn't exist
 - [ ] Rebuild in Rust
 - [ ] Handle errors nicely and log!
