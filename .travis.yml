@@ -1,0 +1,26 @@
+---
+
+language: node_js
+matrix:
+  include:
+    - name: "Unit test"
+      node_js: "10"
+      sudo: false
+      env:
+        - MMF_API_BASE_URL=localhost:8080/
+        - MMF_API_SECRET_KEY=5LZ6ZMW6PFYYBX9GNSUUY6JX4DQBL8Q9ZTVHRREHZW
+        - FILE_STORAGE_HOST=localhost
+        - FILE_STORAGE_PORT=9001
+        - FILE_STORAGE_USE_SSL=false
+        - FILE_STORAGE_ACCESS_KEY=KYS6M5PPCRUBF4WTJQR2PZXHRQEHWYE3YYXTTLBW48
+        - FILE_STORAGE_SECRET_KEY=HQR267GSK8Q746RWQAK8BLKXQ7Z4BTJXSCT2G3DQE3
+        - RABBITMQ_HOST=localhost
+        - RABBITMQ_PORT=5672
+        - RABBITMQ_USER=travis_user
+        - RABBITMQ_PASSWORD=M9CWLGGZDZBY38JZHGRKLFSTEJNZJ3RBRZ9AD2G5UH
+        - UID=1000
+        - GID=1000
+        - UNAME=travis_worker
+      script:
+        - "npm run lint"
+        - "npm test"
