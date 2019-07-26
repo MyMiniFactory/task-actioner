@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-'use strict';
-
 const amqp = require('amqplib/callback_api');
 
 const actioner = require('./actioner');

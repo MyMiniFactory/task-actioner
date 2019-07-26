@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-'use strict';
-
 const util = require('util');
 const dotenv = require('dotenv');
 const fs = require('fs');

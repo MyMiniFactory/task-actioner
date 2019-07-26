@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-'use strict';
-
 const decompress = require('decompress');
 const decompressUnzip = require('decompress-unzip');
 const path = require('path');
