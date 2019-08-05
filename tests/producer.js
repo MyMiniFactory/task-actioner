@@ -6,7 +6,7 @@ const amqp = require('amqplib/callback_api');
 
 const zipPayload = {
     action: 'zip',
-    files: [
+    inputFiles: [
         {
             bucketName: 'object',
             objectName: '17853/tchic.stl'
@@ -16,7 +16,13 @@ const zipPayload = {
             objectName: '17853/tchac.scad'
         }
     ],
-    args: ['-rj', '/app/files/output/result.zip', '/app/files/input'],
+    args: [],
+    outputFiles: {
+        output: {
+            location: 'output',
+            name: 'result.zip'
+        }
+    },
     s3Location: {
         bucketName: 'object',
         keyPrefix: 'receiver'
@@ -25,13 +31,14 @@ const zipPayload = {
 
 const unzipPayload = {
     action: 'unzip',
-    files: [
+    inputFiles: [
         {
             bucketName: 'object',
-            objectName: 'receiver/8858b5a8a7a49b0d6e29be919051e916.zip'
+            objectName: 'receiver/c266641c234057c387908820f530d99f.zip'
         }
     ],
     args: [],
+    outputFiles: {},
     s3Location: {
         bucketName: 'object',
         keyPrefix: 'receiver'
@@ -48,7 +55,7 @@ amqp.connect('amqp://localhost', function(error0, connection) {
         }
 
         var queue = 'hello';
-        const msg = JSON.stringify(zipPayload);
+        const msg = JSON.stringify(unzipPayload);
 
         channel.assertQueue(queue, {
             durable: false

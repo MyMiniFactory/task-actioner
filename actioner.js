@@ -22,10 +22,11 @@ const minioClient = new minio.Client({
     secretKey: process.env.FILE_STORAGE_SECRET_KEY
 });
 
-async function createWorkspace(randomString) {
+async function createWorkspace(randomString, outputFiles) {
     const workspace = appDir + '/tmp/' + randomString;
     await fs.promises.mkdir(workspace + '/input', { recursive: true });
     await fs.promises.mkdir(workspace + '/output', {});
+    await fs.promises.writeFile(workspace + '/results.json', JSON.stringify(outputFiles));
 
     return workspace;
 }
@@ -102,16 +103,20 @@ async function triggerNativeAction(actionName, args, workspace) {
 
 function uploadFilesFromWorkspaceToS3(client, workspace, s3Location) {
     return new Promise((resolve, reject) => {
-        fs.readdir(workspace + '/output', {}, (err, files) => {
+        fs.readFile(workspace + '/results.json', 'utf8', (err, data) => {
             if (err) reject(err);
 
+            const files = Object.values(JSON.parse(data));
+            console.log(files);
+
             files.map(file => {
+                const filename = file.name;
                 const ext =
-                    file.substring(file.lastIndexOf('.') + 1, file.length) ||
-                    file;
+                    filename.substring(filename.lastIndexOf('.') + 1, filename.length) ||
+                    filename;
                 const objectName =
                     s3Location.keyPrefix + '/' + uniqueString() + '.' + ext;
-                const filePath = workspace + '/output/' + file;
+                const filePath = workspace + '/' + file.location +  '/' + filename;
                 const metaData = {
                     'Content-Type': mime.getType(ext),
                     'Content-Language': 'en-US',
@@ -136,6 +141,7 @@ function uploadFilesFromWorkspaceToS3(client, workspace, s3Location) {
                     }
                 );
             });
+
             resolve();
         });
     });
@@ -146,7 +152,7 @@ async function main(taskPayload) {
     const randomString = uniqueString();
     let workspace;
     try {
-        workspace = await createWorkspace(randomString);
+        workspace = await createWorkspace(randomString, taskPayload.outputFiles);
     } catch (e) {
         console.log(e);
     }
@@ -158,7 +164,7 @@ async function main(taskPayload) {
     // Get files from file storage service
     await downloadFilesFromS3ToWorkspace(
         minioClient,
-        taskPayload.files,
+        taskPayload.inputFiles,
         workspace
     );
 
