@@ -34,7 +34,7 @@ const unzipPayload = {
     inputFiles: [
         {
             bucketName: 'object',
-            objectName: 'receiver/c266641c234057c387908820f530d99f.zip'
+            objectName: '25875/tchoc.zip'
         }
     ],
     args: [],
