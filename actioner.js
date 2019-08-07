@@ -191,3 +191,4 @@ async function main(taskPayload) {
 module.exports.run = main;
 module.exports.createWorkspace = createWorkspace;
 module.exports.getActionType = getActionType;
+module.exports.downloadFilesFromS3ToWorkspace = downloadFilesFromS3ToWorkspace;

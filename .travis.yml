@@ -2,6 +2,9 @@
 
 language: node_js
 matrix:
+  services:
+    - docker
+
   include:
     - name: "Unit test"
       node_js: "10"
@@ -24,3 +27,7 @@ matrix:
       script:
         - "npm run lint ."
         - "npm test"
+      before_script:
+        - cd tests
+        - docker-compose up -d
+        - cd $TRAVIS_BUILD_DIR

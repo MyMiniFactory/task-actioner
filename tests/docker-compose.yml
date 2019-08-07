@@ -1,0 +1,20 @@
+version: '3'
+services:
+  minio:
+    image: minio/minio:RELEASE.2019-07-10T00-34-56Z
+    volumes:
+      - ${TRAVIS_BUILD_DIR}/tests/data:/data
+    ports:
+      - "9001:9000"
+    environment:
+      MINIO_ACCESS_KEY: ${FILE_STORAGE_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${FILE_STORAGE_SECRET_KEY}
+    command: server /data
+
+  rabbitmq:
+    image: rabbitmq:management-alpine
+    ports:
+     - ${RABBITMQ_PORT}:5672
+     - "1883:1883"
+     - "8883:8883"
+     - "15672:15672"
