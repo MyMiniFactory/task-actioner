@@ -22,7 +22,8 @@ const minioClient = new minio.Client({
     secretKey: process.env.FILE_STORAGE_SECRET_KEY
 });
 
-async function createWorkspace(randomString, outputFiles) {
+async function createWorkspace(outputFiles) {
+    const randomString = uniqueString();
     const workspace = appDir + '/tmp/' + randomString;
     await fs.promises.mkdir(workspace + '/input', { recursive: true });
     await fs.promises.mkdir(workspace + '/output', {});
@@ -149,10 +150,9 @@ function uploadFilesFromWorkspaceToS3(client, workspace, s3Location) {
 
 async function main(taskPayload) {
     // Create temporary work folder
-    const randomString = uniqueString();
     let workspace;
     try {
-        workspace = await createWorkspace(randomString, taskPayload.outputFiles);
+        workspace = await createWorkspace(taskPayload.outputFiles);
     } catch (e) {
         console.log(e);
     }
