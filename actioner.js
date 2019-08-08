@@ -102,7 +102,7 @@ async function triggerNativeAction(actionName, args, workspace) {
     await action.run(args, workspace);
 }
 
-function uploadFilesFromWorkspaceToS3(client, workspace, s3Location) {
+function uploadFilesFromWorkspaceToS3(client, workspace, s3Location, outputFilesPreDefined) {
     return new Promise((resolve, reject) => {
         fs.readFile(workspace + '/results.json', 'utf8', (err, data) => {
             if (err) reject(err);
@@ -115,8 +115,14 @@ function uploadFilesFromWorkspaceToS3(client, workspace, s3Location) {
                 const ext =
                     filename.substring(filename.lastIndexOf('.') + 1, filename.length) ||
                     filename;
-                const objectName =
-                    s3Location.keyPrefix + '/' + uniqueString() + '.' + ext;
+                let objectName;
+                if (true === outputFilesPreDefined) {
+                    objectName =
+                        s3Location.keyPrefix + '/' + filename;
+                } else {
+                    objectName =
+                        s3Location.keyPrefix + '/' + uniqueString() + '.' + ext;
+                }
                 const filePath = workspace + '/' + file.location +  '/' + filename;
                 const metaData = {
                     'Content-Type': mime.getType(ext),
@@ -174,10 +180,13 @@ async function main(taskPayload) {
         await triggerDockerAction(actionName, taskPayload.args, workspace);
     }
 
+    const outputFilesPreDefined = (0 === Object.keys(taskPayload.outputFiles).length)  ? false : true;
+
     await uploadFilesFromWorkspaceToS3(
         minioClient,
         workspace,
-        taskPayload.s3Location
+        taskPayload.s3Location,
+        outputFilesPreDefined
     );
 
     rimraf(workspace, err => {
@@ -192,3 +201,4 @@ module.exports.run = main;
 module.exports.createWorkspace = createWorkspace;
 module.exports.getActionType = getActionType;
 module.exports.downloadFilesFromS3ToWorkspace = downloadFilesFromS3ToWorkspace;
+module.exports.uploadFilesFromWorkspaceToS3 = uploadFilesFromWorkspaceToS3;

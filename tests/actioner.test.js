@@ -58,3 +58,26 @@ test('it downloads object from file storage system', async () => {
         expect(result).toBe(false);
     });
 });
+
+test('it uploads object to file storage system', async (done) => {
+    const outputFiles = {
+        output: {
+            location: 'output',
+            name: 'result.zip'
+        }
+    };
+
+    const outputFilesPreDefined = (0 === Object.keys(outputFiles).length)  ? false : true;
+    const workspace = __dirname + '/tmp/from_zip';
+    console.log(workspace);
+    const s3Location = {
+        bucketName: 'object',
+        keyPrefix: 'receiver'
+    };
+
+    await actioner.uploadFilesFromWorkspaceToS3(minioClient, workspace, s3Location, outputFilesPreDefined);
+    fs.stat(__dirname + '/data/object/receiver/result.zip', (err, stats) => {
+        expect(stats.isFile()).toBe(true);
+    });
+    done();
+});

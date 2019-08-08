@@ -22,7 +22,7 @@
   "scripts": {
     "lint": "eslint",
     "format": "prettier",
-    "test": "jest"
+    "test": "jest --silent"
   },
   "keywords": [],
   "author": "",

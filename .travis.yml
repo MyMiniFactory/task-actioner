@@ -28,6 +28,8 @@ matrix:
         - "npm run lint ."
         - "npm test"
       before_script:
-        - cd tests
+        - cd actions/zip
+        - docker build -t zip .
+        - cd $TRAVIS_BUILD_DIR/tests
         - docker-compose up -d
         - cd $TRAVIS_BUILD_DIR
