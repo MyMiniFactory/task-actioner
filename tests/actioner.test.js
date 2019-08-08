@@ -24,7 +24,8 @@ test('it creates a workspace with input and output folder and a results.json fil
     return actioner.createWorkspace(outputFiles).then(workspace => {
         expect(
             fs.lstatSync(workspace + '/input').isDirectory() &&
-                fs.lstatSync(workspace + '/output').isDirectory() && fs.lstatSync(workspace + '/results.json').isFile()
+                fs.lstatSync(workspace + '/output').isDirectory() &&
+                fs.lstatSync(workspace + '/results.json').isFile()
         ).toBe(true);
     });
 });
@@ -53,13 +54,17 @@ test('it downloads object from file storage system', async () => {
         }
     ];
     const workspace = await actioner.createWorkspace(outputFiles);
-    await actioner.downloadFilesFromS3ToWorkspace(minioClient, inputFiles, workspace);
+    await actioner.downloadFilesFromS3ToWorkspace(
+        minioClient,
+        inputFiles,
+        workspace
+    );
     return emptyDir(workspace + '/input').then(result => {
         expect(result).toBe(false);
     });
 });
 
-test('it uploads object to file storage system', async (done) => {
+test('it uploads object to file storage system', async () => {
     const outputFiles = {
         output: {
             location: 'output',
@@ -67,7 +72,8 @@ test('it uploads object to file storage system', async (done) => {
         }
     };
 
-    const outputFilesPreDefined = (0 === Object.keys(outputFiles).length)  ? false : true;
+    const outputFilesPreDefined =
+        0 === Object.keys(outputFiles).length ? false : true;
     const workspace = __dirname + '/tmp/from_zip';
     console.log(workspace);
     const s3Location = {
@@ -75,9 +81,13 @@ test('it uploads object to file storage system', async (done) => {
         keyPrefix: 'receiver'
     };
 
-    await actioner.uploadFilesFromWorkspaceToS3(minioClient, workspace, s3Location, outputFilesPreDefined);
-    fs.stat(__dirname + '/data/object/receiver/result.zip', (err, stats) => {
-        expect(stats.isFile()).toBe(true);
-    });
-    done();
+    await actioner.uploadFilesFromWorkspaceToS3(
+        minioClient,
+        workspace,
+        s3Location,
+        outputFilesPreDefined
+    );
+    expect(
+        fs.lstatSync(__dirname + '/data/object/receiver/result.zip').isFile()
+    ).toBe(true);
 });

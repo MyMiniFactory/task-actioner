@@ -27,7 +27,10 @@ async function createWorkspace(outputFiles) {
     const workspace = appDir + '/tmp/' + randomString;
     await fs.promises.mkdir(workspace + '/input', { recursive: true });
     await fs.promises.mkdir(workspace + '/output', {});
-    await fs.promises.writeFile(workspace + '/results.json', JSON.stringify(outputFiles));
+    await fs.promises.writeFile(
+        workspace + '/results.json',
+        JSON.stringify(outputFiles)
+    );
 
     return workspace;
 }
@@ -102,28 +105,41 @@ async function triggerNativeAction(actionName, args, workspace) {
     await action.run(args, workspace);
 }
 
-function uploadFilesFromWorkspaceToS3(client, workspace, s3Location, outputFilesPreDefined) {
-    return new Promise((resolve, reject) => {
+async function uploadFilesFromWorkspaceToS3(
+    client,
+    workspace,
+    s3Location,
+    outputFilesPreDefined
+) {
+    const resultsFile = await new Promise((resolve, reject) => {
         fs.readFile(workspace + '/results.json', 'utf8', (err, data) => {
             if (err) reject(err);
 
-            const files = Object.values(JSON.parse(data));
-            console.log(files);
+            resolve(data);
+        });
+    });
 
-            files.map(file => {
+    const files = Object.values(JSON.parse(resultsFile));
+    console.log(files);
+
+    const uploads = files.map(
+        file =>
+            new Promise((resolve, reject) => {
                 const filename = file.name;
                 const ext =
-                    filename.substring(filename.lastIndexOf('.') + 1, filename.length) ||
-                    filename;
+                    filename.substring(
+                        filename.lastIndexOf('.') + 1,
+                        filename.length
+                    ) || filename;
                 let objectName;
                 if (true === outputFilesPreDefined) {
-                    objectName =
-                        s3Location.keyPrefix + '/' + filename;
+                    objectName = s3Location.keyPrefix + '/' + filename;
                 } else {
                     objectName =
                         s3Location.keyPrefix + '/' + uniqueString() + '.' + ext;
                 }
-                const filePath = workspace + '/' + file.location +  '/' + filename;
+                const filePath =
+                    workspace + '/' + file.location + '/' + filename;
                 const metaData = {
                     'Content-Type': mime.getType(ext),
                     'Content-Language': 'en-US',
@@ -145,13 +161,13 @@ function uploadFilesFromWorkspaceToS3(client, workspace, s3Location, outputFiles
                             ' etag: ',
                             etag
                         );
+                        resolve(etag);
                     }
                 );
-            });
+            })
+    );
 
-            resolve();
-        });
-    });
+    return await Promise.all(uploads);
 }
 
 async function main(taskPayload) {
@@ -180,7 +196,8 @@ async function main(taskPayload) {
         await triggerDockerAction(actionName, taskPayload.args, workspace);
     }
 
-    const outputFilesPreDefined = (0 === Object.keys(taskPayload.outputFiles).length)  ? false : true;
+    const outputFilesPreDefined =
+        0 === Object.keys(taskPayload.outputFiles).length ? false : true;
 
     await uploadFilesFromWorkspaceToS3(
         minioClient,
