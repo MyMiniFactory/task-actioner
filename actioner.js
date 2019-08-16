@@ -81,32 +81,37 @@ function downloadFilesFromS3ToWorkspace(client, files, workspace) {
     return Promise.all(downloads);
 }
 
-async function shell(command, args) {
-    return new Promise(resolve => {
-        const docker = spawn(command, args, {});
-
-        docker.stdout.on('data', data => {
-            console.log('stdout: ', data);
+function onExit(childProcess) {
+    return new Promise((resolve, reject) => {
+        childProcess.once('exit', code => {
+            if (0 === code) {
+                resolve(undefined);
+            } else {
+                reject(new Error('Exit with error code: ' + code));
+            }
         });
-
-        docker.on('close', code => {
-            console.log('Docker action finish with exit code: ', code);
-            resolve();
+        childProcess.once('error', err => {
+            reject(err);
         });
     });
 }
 
-async function triggerDockerAction(actionName, args, workspace) {
-    const commandBase = [
-        'run',
-        '--rm',
-        '-v',
-        workspace + ':/app/files',
-        actionName
-    ];
-    const commandArgs = commandBase.concat(args);
+async function triggerDockerAction(actionName, actionGpu, args, workspace) {
+    let commandBase = ['run', '--rm', '-v', workspace + ':/app/files'];
 
-    await shell('docker', commandArgs);
+    if (true === actionGpu) {
+        commandBase = commandBase.concat(['--gpus', 'all']);
+    }
+
+    let commandArgs = commandBase.append(actionName);
+
+    commandArgs = commandArgs.concat(args);
+
+    const docker = spawn('docker', commandArgs, {
+        stdio: [process.stdin, process.stdout, process.stderr]
+    });
+
+    await onExit(docker);
 }
 
 async function triggerNativeAction(actionName, args, workspace) {
@@ -203,7 +208,12 @@ async function main(taskPayload) {
     if ('native' === actionType) {
         await triggerNativeAction(actionName, taskPayload.args, workspace);
     } else {
-        await triggerDockerAction(actionName, taskPayload.args, workspace);
+        await triggerDockerAction(
+            actionName,
+            taskPayload.gpu,
+            taskPayload.args,
+            workspace
+        );
     }
 
     const outputFilesPreDefined =
