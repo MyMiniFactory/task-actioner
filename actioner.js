@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-const util = require('util');
 const dotenv = require('dotenv');
 const fs = require('fs');
 const mime = require('mime');
@@ -12,7 +11,7 @@ const uniqueString = require('unique-string');
 dotenv.config();
 
 const appDir = path.dirname(require.main.filename);
-const exec = util.promisify(require('child_process').exec);
+const spawn = require('child_process').spawn;
 
 const minioClient = new minio.Client({
     endPoint: process.env.FILE_STORAGE_HOST,
@@ -82,21 +81,32 @@ function downloadFilesFromS3ToWorkspace(client, files, workspace) {
     return Promise.all(downloads);
 }
 
-async function shell(command) {
-    const { stdout, stderr } = await exec(command);
-    console.log('stdout:', stdout);
-    console.error('stderr:', stderr);
+async function shell(command, args) {
+    return new Promise(resolve => {
+        const docker = spawn(command, args, {});
+
+        docker.stdout.on('data', data => {
+            console.log('stdout: ', data);
+        });
+
+        docker.on('close', code => {
+            console.log('Docker action finish with exit code: ', code);
+            resolve();
+        });
+    });
 }
 
 async function triggerDockerAction(actionName, args, workspace) {
-    await shell(
-        'docker run --rm -v ' +
-            workspace +
-            ':/app/files ' +
-            actionName +
-            ' ' +
-            args.join(' ')
-    );
+    const commandBase = [
+        'run',
+        '--rm',
+        '-v',
+        workspace + ':/app/files',
+        actionName
+    ];
+    const commandArgs = commandBase.concat(args);
+
+    await shell('docker', commandArgs);
 }
 
 async function triggerNativeAction(actionName, args, workspace) {
