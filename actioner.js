@@ -103,9 +103,9 @@ async function triggerDockerAction(actionName, actionGpu, args, workspace) {
         commandBase = commandBase.concat(['--gpus', 'all']);
     }
 
-    let commandArgs = commandBase.append(actionName);
+    commandBase.push(actionName);
 
-    commandArgs = commandArgs.concat(args);
+    const commandArgs = commandBase.concat(args);
 
     const docker = spawn('docker', commandArgs, {
         stdio: [process.stdin, process.stdout, process.stderr]
