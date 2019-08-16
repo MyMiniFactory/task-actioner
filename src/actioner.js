@@ -1,16 +1,13 @@
 #!/usr/bin/env node
 
-const dotenv = require('dotenv');
+const appDir = require('./ta-util').appDir;
 const fs = require('fs');
 const mime = require('mime');
 const minio = require('minio');
-const path = require('path');
+const onExit = require('./ta-util');
 const rimraf = require('rimraf');
 const uniqueString = require('unique-string');
 
-dotenv.config();
-
-const appDir = path.dirname(require.main.filename);
 const spawn = require('child_process').spawn;
 
 const minioClient = new minio.Client({
@@ -35,6 +32,7 @@ async function createWorkspace(outputFiles) {
 }
 
 function getActionType(action) {
+    console.log(appDir + '/actions.json');
     return new Promise((resolve, reject) => {
         fs.readFile(appDir + '/actions.json', (err, data) => {
             if (err) {
@@ -79,21 +77,6 @@ function downloadFilesFromS3ToWorkspace(client, files, workspace) {
     );
 
     return Promise.all(downloads);
-}
-
-function onExit(childProcess) {
-    return new Promise((resolve, reject) => {
-        childProcess.once('exit', code => {
-            if (0 === code) {
-                resolve(undefined);
-            } else {
-                reject(new Error('Exit with error code: ' + code));
-            }
-        });
-        childProcess.once('error', err => {
-            reject(err);
-        });
-    });
 }
 
 async function triggerDockerAction(actionName, actionGpu, args, workspace) {
@@ -196,7 +179,14 @@ async function main(taskPayload) {
 
     const actionName = taskPayload.action;
 
-    const actionType = await getActionType(actionName);
+    let actionType = await getActionType(actionName);
+    try {
+        actionType = await getActionType(actionName);
+    } catch (err) {
+        console.error(err);
+        console.log('Reporting error to MMF api');
+        throw err;
+    }
 
     // Get files from file storage service
     await downloadFilesFromS3ToWorkspace(
@@ -206,7 +196,13 @@ async function main(taskPayload) {
     );
 
     if ('native' === actionType) {
-        await triggerNativeAction(actionName, taskPayload.args, workspace);
+        try {
+            await triggerNativeAction(actionName, taskPayload.args, workspace);
+        } catch (err) {
+            console.error(err);
+            console.log('Reporting error to MMF api');
+            throw err;
+        }
     } else {
         await triggerDockerAction(
             actionName,
@@ -226,6 +222,7 @@ async function main(taskPayload) {
         outputFilesPreDefined
     );
 
+    /* istanbul ignore next */
     rimraf(workspace, err => {
         if (err) {
             console.error('Error: ', err);

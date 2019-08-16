@@ -1,5 +1,5 @@
 {
-  "name": "mmf-unzip",
+  "name": "unzip",
   "version": "0.1.0",
   "description": "Unzip files",
   "main": "main.js",

@@ -1,4 +1,4 @@
-const actioner = require('../actioner');
+const actioner = require('../src/actioner');
 const dotenv = require('dotenv');
 const emptyDir = require('empty-dir');
 const fs = require('fs');
