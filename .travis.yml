@@ -24,6 +24,7 @@ matrix:
         - UID=1000
         - GID=1000
         - UNAME=travis_worker
+        - TASK_ACTIONER_PATH=$TRAVIS_BUILD_DIR
       script:
         - "npm run lint ."
         - "npm test"
