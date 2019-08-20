@@ -99,7 +99,7 @@ class AddCommand extends Command {
                     stdio: [process.stdin, process.stdout, process.stderr]
                 });
                 try {
-                    await onExit(dockerBuild);
+                    await onExit(dockerBuild, {isFinished: false});
                 } catch (err) {
                     this.error();
                 }
@@ -110,7 +110,7 @@ class AddCommand extends Command {
                     stdio: [process.stdin, process.stdout, process.stderr]
                 });
                 try {
-                    await onExit(dockerPull);
+                    await onExit(dockerPull, {isFinished: false});
                 } catch (err) {
                     this.error(err);
                 }
@@ -127,7 +127,7 @@ class AddCommand extends Command {
                 });
                 // We install a local native action: npm install
                 try {
-                    await onExit(npmInstall);
+                    await onExit(npmInstall, {isFinished: false});
                 } catch (err) {
                     this.error(err);
                 }
@@ -138,7 +138,7 @@ class AddCommand extends Command {
                     stdio: [process.stdin, process.stdout, process.stderr]
                 });
                 try {
-                    await onExit(npmInstall);
+                    await onExit(npmInstall, {isFinished: false});
                 } catch (err) {
                     this.error(err);
                 }

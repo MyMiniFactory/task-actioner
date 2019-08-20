@@ -14,9 +14,10 @@ async function shell(command) {
     console.error('stderr:', stderr);
 }
 
-function onExit(childProcess) {
+function onExit(childProcess, actionFinishedObject) {
     return new Promise((resolve, reject) => {
         childProcess.once('exit', code => {
+            actionFinishedObject.isFinished = true;
             if (0 === code) {
                 resolve(undefined);
             } else {
@@ -24,6 +25,7 @@ function onExit(childProcess) {
             }
         });
         childProcess.once('error', err => {
+            actionFinishedObject.isFinished = true;
             reject(err);
         });
     });

@@ -79,7 +79,26 @@ function downloadFilesFromS3ToWorkspace(client, files, workspace) {
     return Promise.all(downloads);
 }
 
-async function triggerDockerAction(actionName, actionGpu, args, workspace) {
+async function sendTaskProgression(taskId, progress) {
+    const endpoint = process.env.MMF_API_BASE_URL + '/task/' + taskId;
+    const requestConfig = {
+        method: 'PATCH',
+        body: JSON.stringify(progress),
+        headers:{
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + process.env.MMF_API_SECRET_KEY
+        }
+    };
+    try {
+        fetch(endpoint, requestConfig);
+    } catch (err) {
+        console.error(err);
+        throw err;
+    }
+}
+
+
+async function triggerDockerAction(actionName, actionGpu, args, workspace, actionId) {
     let commandBase = ['run', '--rm', '-v', workspace + ':/app/files'];
 
     if (true === actionGpu) {
@@ -94,7 +113,29 @@ async function triggerDockerAction(actionName, actionGpu, args, workspace) {
         stdio: [process.stdin, process.stdout, process.stderr]
     });
 
-    await onExit(docker);
+    let actionFinishedObject = {
+        isFinished: false
+    };
+
+    function checkfile(file, actionId) {
+        fs.readFile(file, (err, data) => {
+            if (err) {
+                console.log('Can\'t read file, while checking it');
+            }
+            sendTaskProgression(actionId, JSON.parse(data));
+
+        });
+
+        if (!actionFinishedObject.isFinished) {
+            setTimeout(function () {
+                checkfile(file, actionId);
+            }, 5000);
+        }
+    }
+
+    checkfile(workspace + '/output/status.json', actionId);
+
+    await onExit(docker, actionFinishedObject);
 }
 
 async function triggerNativeAction(actionName, args, workspace) {
@@ -208,7 +249,8 @@ async function main(taskPayload) {
             actionName,
             taskPayload.gpu,
             taskPayload.args,
-            workspace
+            workspace,
+            taskPayload.id
         );
     }
 
