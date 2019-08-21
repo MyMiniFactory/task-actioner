@@ -82,14 +82,16 @@ class AddCommand extends Command {
             );
         }
         const actionPath = flags.path;
-        let pathIsValid;
-        try {
-            pathIsValid = await this.isPathValid(actionPath);
-        } catch (err) {
-            this.error(err);
-        }
-        if (false === pathIsValid) {
-            this.error('The path you\'ve chosen is not valid');
+        if (actionPath) {
+            let pathIsValid;
+            try {
+                pathIsValid = await this.isPathValid(actionPath);
+            } catch (err) {
+                this.error(err);
+            }
+            if (false === pathIsValid) {
+                this.error('The path you\'ve chosen is not valid');
+            }
         }
         if ('docker' === type) {
             if (actionPath) {
@@ -169,7 +171,8 @@ AddCommand.flags = {
     }),
     path: flags.string({
         char: 'p',
-        description: 'The path of the local action you add'
+        description: 'The path of the local action you add',
+        required: false
     })
 };
 
