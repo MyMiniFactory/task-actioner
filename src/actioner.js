@@ -79,8 +79,8 @@ function downloadFilesFromS3ToWorkspace(client, files, workspace) {
     return Promise.all(downloads);
 }
 
-async function sendTaskProgression(taskId, progress) {
-    const endpoint = process.env.MMF_API_BASE_URL + '/task/' + taskId;
+async function sendTaskProgres(taskId, progress) {
+    const endpoint = process.env.MMF_API_BASE_URL + '/tasks/' + taskId;
     const requestConfig = {
         method: 'PATCH',
         body: JSON.stringify(progress),
@@ -122,7 +122,7 @@ async function triggerDockerAction(actionName, actionGpu, args, workspace, actio
             if (err) {
                 console.log('Can\'t read file, while checking it');
             }
-            sendTaskProgression(actionId, JSON.parse(data));
+            sendTaskProgres(actionId, JSON.parse(data));
 
         });
 
