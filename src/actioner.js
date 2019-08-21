@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const appDir = require('./ta-util').appDir;
+const axios = require('axios');
 const fs = require('fs');
 const mime = require('mime');
 const minio = require('minio');
@@ -82,15 +83,14 @@ function downloadFilesFromS3ToWorkspace(client, files, workspace) {
 async function sendTaskProgres(taskId, progress) {
     const endpoint = process.env.MMF_API_BASE_URL + '/tasks/' + taskId;
     const requestConfig = {
-        method: 'PATCH',
-        body: JSON.stringify(progress),
         headers:{
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + process.env.MMF_API_SECRET_KEY
         }
     };
+    const requestData = {progress: JSON.stringify(progress)};
     try {
-        fetch(endpoint, requestConfig);
+        axios.patch(endpoint, requestData, requestConfig);
     } catch (err) {
         console.error(err);
         throw err;
@@ -121,8 +121,10 @@ async function triggerDockerAction(actionName, actionGpu, args, workspace, actio
         fs.readFile(file, (err, data) => {
             if (err) {
                 console.log('Can\'t read file, while checking it');
+            } else {
+                console.log('Sending progress to mmf');
+                sendTaskProgres(actionId, JSON.parse(data));
             }
-            sendTaskProgres(actionId, JSON.parse(data));
 
         });
 

@@ -12,6 +12,7 @@
     "@oclif/plugin-help": "^2.2.0",
     "acorn": "^6.3.0",
     "amqplib": "^0.5.3",
+    "axios": "^0.19.0",
     "dotenv": "^8.0.0",
     "empty-dir": "^2.0.0",
     "figlet": "^1.2.3",
