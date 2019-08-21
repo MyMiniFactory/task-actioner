@@ -4,7 +4,7 @@ const appDir = require('./ta-util').appDir;
 const fs = require('fs');
 const mime = require('mime');
 const minio = require('minio');
-const onExit = require('./ta-util');
+const onExit = require('./ta-util').onExit;
 const rimraf = require('rimraf');
 const uniqueString = require('unique-string');
 
