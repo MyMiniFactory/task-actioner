@@ -83,12 +83,12 @@ function downloadFilesFromS3ToWorkspace(client, files, workspace) {
 async function sendTaskProgres(taskId, progress) {
     const endpoint = process.env.MMF_API_BASE_URL + '/tasks/' + taskId;
     const requestConfig = {
-        headers:{
+        headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + process.env.MMF_API_SECRET_KEY
+            Authorization: 'Bearer ' + process.env.MMF_API_SECRET_KEY
         }
     };
-    const requestData = {progress: JSON.stringify(progress)};
+    const requestData = { progress: JSON.stringify(progress) };
     try {
         axios.patch(endpoint, requestData, requestConfig);
     } catch (err) {
@@ -97,8 +97,13 @@ async function sendTaskProgres(taskId, progress) {
     }
 }
 
-
-async function triggerDockerAction(actionName, actionGpu, args, workspace, actionId) {
+async function triggerDockerAction(
+    actionName,
+    actionGpu,
+    args,
+    workspace,
+    actionId
+) {
     let commandBase = ['run', '--rm', '-v', workspace + ':/app/files'];
 
     if (true === actionGpu) {
@@ -125,11 +130,10 @@ async function triggerDockerAction(actionName, actionGpu, args, workspace, actio
                 console.log('Sending progress to mmf');
                 sendTaskProgres(actionId, JSON.parse(data));
             }
-
         });
 
         if (!actionFinishedObject.isFinished) {
-            setTimeout(function () {
+            setTimeout(() => {
                 checkfile(file, actionId);
             }, 5000);
         }
