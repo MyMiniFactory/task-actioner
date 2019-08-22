@@ -2,9 +2,9 @@
 
 const { Command, flags } = require('@oclif/command');
 const fs = require('fs');
-const path = require('path');
 const appDir = require('../../ta-util').appDir;
 const onExit = require('../../ta-util').onExit;
+const path = require('path');
 const spawn = require('child_process').spawn;
 
 class AddCommand extends Command {
