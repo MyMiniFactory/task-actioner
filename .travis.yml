@@ -27,10 +27,11 @@ matrix:
         - TASK_ACTIONER_PATH=$TRAVIS_BUILD_DIR
       script:
         - "npm run lint ."
-        - "npm test"
+        - "npm test -- --silent"
       before_script:
-        - cd actions/zip
-        - docker build -t zip .
+        - npm i tests/actions/unzip
+        - cd $TRAVIS_BUILD_DIR/tests/actions/zip
+        - docker build -t zip --build-arg UID=$UID .
         - cd $TRAVIS_BUILD_DIR/tests
         - docker-compose up -d
         - cd $TRAVIS_BUILD_DIR

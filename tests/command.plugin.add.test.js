@@ -9,7 +9,7 @@ test('it checks that action is valid', async () => {
     const actionIsValid = await addCommand.isActionValid(
         action,
         type,
-        appDir + '/tests/actions.json'
+        appDir + '/actions.json'
     );
     expect(actionIsValid).toBe(true);
 });
@@ -21,23 +21,23 @@ test('it checks that action is not valid', async () => {
     const actionIsValid = await addCommand.isActionValid(
         action,
         type,
-        appDir + '/tests/actions.json'
+        appDir + '/actions.json'
     );
     expect(actionIsValid).toBe(false);
 });
 
 test('it checks that path is valid', async () => {
     const addCommand = new AddCommand();
-    const actionPath = appDir + '/actions/unzip';
+    const actionPath = appDir + '/tests/actions/unzip';
     const pathIsValid = await addCommand.isPathValid(actionPath);
     expect(pathIsValid).toBe(true);
 });
 
 test('it checks that path is not valid', async () => {
     const addCommand = new AddCommand();
-    const actionPath = appDir + '/actions/slice';
+    const actionPath = appDir + '/tests/actions/slice';
     await expect(addCommand.isPathValid(actionPath)).rejects.toThrow(
-        'ENOENT: no such file or directory, stat \'' + appDir + '/actions/slice\''
+        'ENOENT: no such file or directory, stat \'' + appDir + '/tests/actions/slice\''
     );
 });
 
@@ -48,11 +48,11 @@ test('it adds an action to the action list', async () => {
     const actionListExpected = {
         zip: {
             type: 'docker',
-            url: 'file:./actions/zip'
+            url: 'tests/actions/zip'
         },
         unzip: {
             type: 'native',
-            url: 'file:./actions/unzip'
+            url: 'tests/actions/unzip'
         },
         slice: {
             type: 'docker'
@@ -61,9 +61,9 @@ test('it adds an action to the action list', async () => {
     await addCommand.addActionToActionsList(
         action,
         type,
-        appDir + '/tests/actions.json'
+        appDir + '/actions.json'
     );
-    const data = await fs.promises.readFile(appDir + '/tests/actions.json');
+    const data = await fs.promises.readFile(appDir + '/actions.json');
     const actions = JSON.parse(data);
     expect(actions).toEqual(actionListExpected);
 });

@@ -16,6 +16,7 @@ const zipPayload = {
             objectName: '17853/tchac.scad'
         }
     ],
+    gpu: false,
     args: [],
     outputFiles: {
         output: {
@@ -37,6 +38,7 @@ const unzipPayload = {
             objectName: '25875/tchoc.zip'
         }
     ],
+    gpu: false,
     args: [],
     outputFiles: {},
     s3Location: {

@@ -292,4 +292,6 @@ module.exports.run = main;
 module.exports.createWorkspace = createWorkspace;
 module.exports.getActionType = getActionType;
 module.exports.downloadFilesFromS3ToWorkspace = downloadFilesFromS3ToWorkspace;
+module.exports.triggerNativeAction = triggerNativeAction;
+module.exports.triggerDockerAction = triggerDockerAction;
 module.exports.uploadFilesFromWorkspaceToS3 = uploadFilesFromWorkspaceToS3;
