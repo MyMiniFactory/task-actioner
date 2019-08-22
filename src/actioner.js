@@ -271,11 +271,20 @@ async function main(taskPayload) {
     );
 
     /* istanbul ignore next */
-    rimraf(workspace, err => {
+    fs.readFile(workspace + '/output/status.json', (err, data) => {
         if (err) {
-            console.error('Error: ', err);
+            console.log('Can\'t read file, while checking it');
+        } else {
+            console.log('Sending final progress to mmf');
+            sendTaskProgres(taskPayload.id, JSON.parse(data));
+
+            rimraf(workspace, err => {
+                if (err) {
+                    console.error('Error: ', err);
+                }
+                console.log('done');
+            });
         }
-        console.log('done');
     });
 }
 
