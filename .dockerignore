@@ -1,0 +1,10 @@
+.env
+node_modules
+tests/data/.minio.sys/
+tests/
+actioner-benchmark.js
+actions/
+LICENSE
+README.md
+tmp/
+payload-exemple.json

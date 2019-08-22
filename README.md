@@ -18,6 +18,36 @@ if it's a docker container:
 - Built in code (faster/reliable)
 - call of Docker image (GitHub actions-like)
 
+## Use Task Actioner Docker image
+
+### Pull image
+
+```
+docker pull myminifactory/task-actioner
+```
+
+### Environment variable
+
+Here are all the environment variables you need to run the container:
+
+| Variable name | Description | Default value |
+|---|---|---|
+| MMF\_API\_BASE\_URL  | The base url of your MyMiniFactory instance | null |
+| MMF\_API\_SECRET\_KEY | Your access token to use your MyMiniFactory instance | null |
+| FILE\_STORAGE\_HOST | The url of your storage service  | null |
+| FILE\_STORAGE\_PORT | The port of you storage service | null |
+| FILE\_STORAGE\_USE\_SSL | put it to true if you want to use SSL to communicate with your storage service | null |
+| FILE\_STORAGE\_ACCESS\_KEY | The login of your storage service  | null |
+| FILE\_STORAGE\_SECRET\_KEY | The password of your storage service  | null |
+| RABBITMQ\_HOST | The url of your RabbitMQ service | null |
+| RABBITMQ\_PORT | The port of your storage service | null |
+| RABBITMQ\_USER | The login of your storage service | null |
+| RABBITMQ\_PASSWORD | The password of your storage service | null |
+| UID | The user id of the user to manipulate your file in the container launched with docker actions | 1000 |
+| GID | The group id of the user to manipulate your file in the container launched with docker actions | 1000 |
+| UNAME  | The name of the user to manipulate your file in the container launched with docker actions | worker |
+|TASK\_ACTIONER\_PATH | The location of your task actioner application | null |
+
 ## TODO
 
 - [x] Plug the consumer to rabbitMQ

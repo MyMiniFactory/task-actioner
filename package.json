@@ -21,8 +21,7 @@
     "minio": "^7.0.10",
     "rimraf": "^2.6.3",
     "toml": "^3.0.0",
-    "unique-string": "^2.0.0",
-    "unzip": "file:actions/unzip"
+    "unique-string": "^2.0.0"
   },
   "devDependencies": {
     "@oclif/dev-cli": "^1.22.2",
