@@ -4,13 +4,16 @@ const { Command } = require('@oclif/command');
 const appDir = require('../ta-util').appDir;
 const fs = require('fs');
 const onExit = require('../ta-util').onExit;
+const path = require('path');
 const spawn = require('child_process').spawn;
 
 class InstallCommand extends Command {
     async run() {
         let data;
         try {
-            data = await fs.promises.readFile(appDir + '/actions.json');
+            data = await fs.promises.readFile(
+                path.join(appDir, '/actions.json')
+            );
         } catch (err) {
             this.error(err);
         }

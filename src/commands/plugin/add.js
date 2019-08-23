@@ -71,7 +71,7 @@ class AddCommand extends Command {
             actionIsValid = await this.isActionValid(
                 action,
                 type,
-                appDir + '/actions.json'
+                path.join(appDir, 'actions.json')
             );
         } catch (err) {
             this.error(err);
@@ -118,7 +118,7 @@ class AddCommand extends Command {
                 }
             }
 
-            this.addActionToActionsList(action, type, appDir + '/actions.json');
+            this.addActionToActionsList(action, type, path.join(appDir + 'actions.json'));
         }
 
         if ('native' === type) {
@@ -146,7 +146,7 @@ class AddCommand extends Command {
                 }
             }
 
-            this.addActionToActionsList(action, type, appDir + '/actions.json');
+            this.addActionToActionsList(action, type, path.join(appDir, 'actions.json'));
         }
     }
 }
