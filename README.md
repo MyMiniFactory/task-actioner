@@ -48,6 +48,33 @@ Here are all the environment variables you need to run the container:
 | UNAME  | The name of the user to manipulate your file in the container launched with docker actions | worker |
 |TASK\_ACTIONER\_PATH | The location of your task actioner application | null |
 
+## Run the tests suite
+
+### Start the test environment
+
+Go into the tests directory and run docker-compose specifying the environment variable TASK\_ACTIONER\_PATH,
+RABBITMQ\_PORT, FILE\_STORAGE\_ACCESS\_KEY and FILE\_STORAGE\_SECRET\_KEY
+
+```
+TASK_ACTIONER_PATH=<task_actioner_path> RABBITMQ_PORT=<rabbitmq_port> FILE_STORAGE_ACCESS_KEY=<access_key> FILE_STORAGE_SECRET_KEY=<secret_key> docker-compose up -d
+```
+
+Go back tot the root the repository
+
+Install the the test actions with docker and npm:
+
+```
+docker build -t zip -f tests/actions/zip/Dockerfile tests/actions/zip/
+
+npm i tests/actions/unzip
+```
+
+Now you can run:
+
+```
+npm test
+```
+
 ## TODO
 
 - [x] Plug the consumer to rabbitMQ

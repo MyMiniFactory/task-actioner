@@ -6,6 +6,7 @@ const fs = require('fs');
 const mime = require('mime');
 const minio = require('minio');
 const onExit = require('./ta-util').onExit;
+const path = require('path');
 const rimraf = require('rimraf');
 const uniqueString = require('unique-string');
 
@@ -21,11 +22,11 @@ const minioClient = new minio.Client({
 
 async function createWorkspace(outputFiles) {
     const randomString = uniqueString();
-    const workspace = appDir + '/tmp/' + randomString;
-    await fs.promises.mkdir(workspace + '/input', { recursive: true });
-    await fs.promises.mkdir(workspace + '/output', {});
+    const workspace = path.join(appDir, 'tmp', randomString);
+    await fs.promises.mkdir(path.join(workspace, 'input'), { recursive: true });
+    await fs.promises.mkdir(path.join(workspace, 'output'), {});
     await fs.promises.writeFile(
-        workspace + '/results.json',
+        path.join(workspace, 'results.json'),
         JSON.stringify(outputFiles)
     );
 
@@ -33,9 +34,8 @@ async function createWorkspace(outputFiles) {
 }
 
 function getActionType(action) {
-    console.log(appDir + '/actions.json');
     return new Promise((resolve, reject) => {
-        fs.readFile(appDir + '/actions.json', (err, data) => {
+        fs.readFile(path.join(appDir, 'actions.json'), (err, data) => {
             if (err) {
                 reject(err);
             }
@@ -54,8 +54,11 @@ function downloadFilesFromS3ToWorkspace(client, files, workspace) {
                         file.objectName.lastIndexOf('.') + 1,
                         file.objectName.length
                     ) || file.objectName;
-                const filePath =
-                    workspace + '/input/' + uniqueString() + '.' + ext;
+                const filePath = path.join(
+                    workspace,
+                    'input',
+                    uniqueString() + '.' + ext
+                );
                 client.fGetObject(
                     file.bucketName,
                     file.objectName,
@@ -139,7 +142,7 @@ async function triggerDockerAction(
         }
     }
 
-    checkfile(workspace + '/output/status.json', actionId);
+    checkfile(path.join(workspace, 'output/status.json'), actionId);
 
     await onExit(docker, actionFinishedObject);
 }
@@ -157,11 +160,15 @@ async function uploadFilesFromWorkspaceToS3(
     outputFilesPreDefined
 ) {
     const resultsFile = await new Promise((resolve, reject) => {
-        fs.readFile(workspace + '/results.json', 'utf8', (err, data) => {
-            if (err) reject(err);
+        fs.readFile(
+            path.join(workspace + '/results.json'),
+            'utf8',
+            (err, data) => {
+                if (err) reject(err);
 
-            resolve(data);
-        });
+                resolve(data);
+            }
+        );
     });
 
     const files = Object.values(JSON.parse(resultsFile));
@@ -183,8 +190,7 @@ async function uploadFilesFromWorkspaceToS3(
                     objectName =
                         s3Location.keyPrefix + '/' + uniqueString() + '.' + ext;
                 }
-                const filePath =
-                    workspace + '/' + file.location + '/' + filename;
+                const filePath = path.join(workspace, file.location, filename);
                 const metaData = {
                     'Content-Type': mime.getType(ext),
                     'Content-Language': 'en-US',
@@ -271,7 +277,7 @@ async function main(taskPayload) {
     );
 
     /* istanbul ignore next */
-    fs.readFile(workspace + '/output/status.json', (err, data) => {
+    fs.readFile(path.join(workspace, 'output/status.json'), (err, data) => {
         if (err) {
             console.log('Can\'t read file, while checking it');
         } else {

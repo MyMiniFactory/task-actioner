@@ -47,7 +47,7 @@ afterAll(() => {
         }
     });
 
-    const testUploadPath = path.join(appDir, 'data/object/receiver');
+    const testUploadPath = path.join(appDir, 'tests/data/object/receiver');
     rimraf(testUploadPath, err => {
         if (err) {
             console.log('Rimraf Error: ', err);
