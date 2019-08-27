@@ -12,6 +12,7 @@ const rabbitMQ = {
     host: process.env.RABBITMQ_HOST,
     port: process.env.RABBITMQ_PORT,
     user: process.env.RABBITMQ_USER,
+    protocol: process.env.RABBITMQ_USE_SSL ? 'amqps' : 'amqp',
     password: process.env.RABBITMQ_PASSWORD
 };
 
@@ -21,7 +22,7 @@ class ConsumeCommand extends Command {
         const queue = flags.queue;
 
         amqp.connect(
-            `amqp://${rabbitMQ.user}:${rabbitMQ.password}@${rabbitMQ.host}:${rabbitMQ.port}`,
+            `${rabbitMQ.protocol}://${rabbitMQ.user}:${rabbitMQ.password}@${rabbitMQ.host}:${rabbitMQ.port}`,
             function(error0, connection) {
                 if (error0) {
                     throw error0;
@@ -32,7 +33,7 @@ class ConsumeCommand extends Command {
                     }
 
                     channel.assertQueue(queue, {
-                        durable: false
+                        durable: true
                     });
 
                     console.log(
