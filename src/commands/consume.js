@@ -22,7 +22,17 @@ class ConsumeCommand extends Command {
         const queue = flags.queue;
 
         amqp.connect(
-            `${rabbitMQ.protocol}://${rabbitMQ.user}:${rabbitMQ.password}@${rabbitMQ.host}:${rabbitMQ.port}`,
+            {
+                protocol: rabbitMQ.protocol,
+                hostname: rabbitMQ.host,
+                port: rabbitMQ.port,
+                username: rabbitMQ.user,
+                password: rabbitMQ.password,
+                locale: 'en_US',
+                frameMax: 0,
+                heartbeat: 60,
+                vhost: '/',
+            },
             function(error0, connection) {
                 if (error0) {
                     throw error0;
