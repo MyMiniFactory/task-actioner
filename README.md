@@ -41,6 +41,7 @@ Here are all the environment variables you need to run the container:
 | FILE\_STORAGE\_SECRET\_KEY | The password of your storage service  | null |
 | RABBITMQ\_HOST | The url of your RabbitMQ service | null |
 | RABBITMQ\_PORT | The port of your storage service | null |
+| RABBITMQ\_USE\_SSL | set true if you want to use AMQPS to communicate with RabbitMQ AMQP otherwise |
 | RABBITMQ\_USER | The login of your storage service | null |
 | RABBITMQ\_PASSWORD | The password of your storage service | null |
 | UID | The user id of the user to manipulate your file in the container launched with docker actions | 1000 |
