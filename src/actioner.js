@@ -221,7 +221,7 @@ async function uploadFilesFromWorkspaceToS3(
     return await Promise.all(uploads);
 }
 
-async function main(taskPayload) {
+async function main(taskPayload, done) {
     // Create temporary work folder
     let workspace;
     try {
@@ -289,9 +289,11 @@ async function main(taskPayload) {
                     console.error('Error: ', err);
                 }
                 console.log('done');
+                done();
             });
         }
     });
+
 }
 
 module.exports.run = main;

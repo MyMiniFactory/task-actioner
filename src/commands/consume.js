@@ -12,7 +12,7 @@ const rabbitMQ = {
     host: process.env.RABBITMQ_HOST,
     port: process.env.RABBITMQ_PORT,
     user: process.env.RABBITMQ_USER,
-    protocol: process.env.RABBITMQ_USE_SSL ? 'amqps' : 'amqp',
+    protocol: process.env.RABBITMQ_USE_SSL == 'true' ? 'amqps' : 'amqp',
     password: process.env.RABBITMQ_PASSWORD
 };
 
@@ -51,6 +51,7 @@ class ConsumeCommand extends Command {
                         queue
                     );
 
+                    channel.prefetch(parseInt(process.env.SIMULTANEOUS_TASKS));
                     channel.consume(
                         queue,
                         function(msg) {
@@ -58,10 +59,11 @@ class ConsumeCommand extends Command {
                             const payload = JSON.parse(msg.content);
                             actioner.run(payload, () => {
                                 console.log('action done');
+                                channel.ack(msg);
                             });
                         },
                         {
-                            noAck: true
+                            noAck: false
                         }
                     );
                 });
