@@ -257,13 +257,19 @@ async function main(taskPayload, done) {
             throw err;
         }
     } else {
-        await triggerDockerAction(
-            actionName,
-            taskPayload.gpu,
-            taskPayload.args,
-            workspace,
-            taskPayload.id
-        );
+        try {
+            await triggerDockerAction(
+                actionName,
+                taskPayload.gpu,
+                taskPayload.args,
+                workspace,
+                taskPayload.id
+            );
+        } catch (err) {
+            console.error(err);
+            console.log('Reporting docker action error to MMF api');
+            done();
+        }
     }
 
     const outputFilesPreDefined =
