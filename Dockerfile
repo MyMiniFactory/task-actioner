@@ -9,6 +9,6 @@ WORKDIR /app
 RUN npm ci \
     && npm link
 
-ENTRYPOINT ["task-actioner", "help"]
+ENTRYPOINT ["task-actioner"]
 
 CMD ["--help"]
