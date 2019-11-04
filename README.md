@@ -48,6 +48,7 @@ Here are all the environment variables you need to run the container:
 | GID | The group id of the user to manipulate your file in the container launched with docker actions | 1000 |
 | UNAME  | The name of the user to manipulate your file in the container launched with docker actions | worker |
 |TASK\_ACTIONER\_PATH | The location of your task actioner application | null |
+|SIMULTANEOUS\_TASKS | Number of concurrent tasks | 1 |
 
 ## Run the tests suite
 
