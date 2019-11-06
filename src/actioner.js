@@ -222,6 +222,7 @@ async function uploadFilesFromWorkspaceToS3(
 }
 
 async function main(taskPayload, done) {
+
     // Create temporary work folder
     let workspace;
     try {
@@ -232,21 +233,27 @@ async function main(taskPayload, done) {
 
     const actionName = taskPayload.action;
 
-    let actionType = await getActionType(actionName);
+    let actionType;
     try {
         actionType = await getActionType(actionName);
     } catch (err) {
         console.error(err);
         console.log('Reporting error to MMF api');
-        throw err;
+        done();
     }
 
     // Get files from file storage service
-    await downloadFilesFromS3ToWorkspace(
-        minioClient,
-        taskPayload.inputFiles,
-        workspace
-    );
+    try {
+        await downloadFilesFromS3ToWorkspace(
+            minioClient,
+            taskPayload.inputFiles,
+            workspace
+        );
+    } catch (err) {
+        console.log('Error downloading files from S3');
+        console.error(err);
+        done();
+    }
 
     if ('native' === actionType) {
         try {
@@ -254,7 +261,7 @@ async function main(taskPayload, done) {
         } catch (err) {
             console.error(err);
             console.log('Reporting error to MMF api');
-            throw err;
+            done();
         }
     } else {
         try {
@@ -266,8 +273,8 @@ async function main(taskPayload, done) {
                 taskPayload.id
             );
         } catch (err) {
-            console.error(err);
             console.log('Reporting docker action error to MMF api');
+            console.error(err);
             done();
         }
     }
@@ -275,24 +282,32 @@ async function main(taskPayload, done) {
     const outputFilesPreDefined =
         0 === Object.keys(taskPayload.outputFiles).length ? false : true;
 
-    await uploadFilesFromWorkspaceToS3(
-        minioClient,
-        workspace,
-        taskPayload.s3Location,
-        outputFilesPreDefined
-    );
+    try {
+        await uploadFilesFromWorkspaceToS3(
+            minioClient,
+            workspace,
+            taskPayload.s3Location,
+            outputFilesPreDefined
+        );
+    } catch (err) {
+        console.log('Error uploading files to S3');
+        console.error(err);
+        done();
+    }
+
 
     /* istanbul ignore next */
     fs.readFile(path.join(workspace, 'output/status.json'), (err, data) => {
         if (err) {
-            console.log('Can\'t read file, while checking it');
+            console.log('Can\'t read status file, while checking it (might not exist yet)');
         } else {
             console.log('Sending final progress to mmf');
             sendTaskProgres(taskPayload.id, JSON.parse(data));
 
             rimraf(workspace, err => {
                 if (err) {
-                    console.error('Error: ', err);
+                    console.error('Error deleting the workspace folder');
+                    console.error(err);
                 }
                 console.log('done');
                 done();
