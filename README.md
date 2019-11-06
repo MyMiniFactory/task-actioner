@@ -1,5 +1,6 @@
 # Task Actioner
 [![Build Status](https://travis-ci.org/MyMiniFactory/task-actioner.svg?branch=master)](https://travis-ci.org/MyMiniFactory/task-actioner)
+[![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/myminifactory/task-actioner)](https://hub.docker.com/repository/docker/myminifactory/task-actioner)
 
 Task Actioner is a RabbitMQ comsumer that receives task messages and runs them as native or docker actions
 
