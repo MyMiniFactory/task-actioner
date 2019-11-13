@@ -131,7 +131,12 @@ async function triggerDockerAction(
                 console.log('Can\'t read file, while checking it');
             } else {
                 console.log('Sending progress to mmf');
-                sendTaskProgres(actionId, JSON.parse(data));
+                try {
+                    let parsedStatusFile = JSON.parse(data);
+                    sendTaskProgres(actionId, parsedStatusFile);
+                } catch (e){
+                    console.log('Can\'t parse the status file, while checking it', e);
+                }
             }
         });
 
