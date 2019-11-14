@@ -42,9 +42,9 @@ class ConsumeCommand extends Command {
                         throw error1;
                     }
 
-                    channel.assertQueue(queue, {
-                        durable: true
-                    });
+                    // channel.assertQueue(queue, {
+                    //     durable: true
+                    // });
 
                     console.log(
                         ' [*] Waiting for messages in %s. To exit press CTRL+C',
