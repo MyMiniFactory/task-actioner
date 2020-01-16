@@ -162,6 +162,17 @@ async function triggerNativeAction(actionName, args, workspace) {
     await action.run(args, workspace);
 }
 
+function cleanExit(workspace, err, done){
+    rimraf(workspace, rmErr => {
+        console.log('removing the workspace');
+        if (rmErr) {
+            console.error('Error deleting the workspace folder');
+            console.error(rmErr);
+        }
+        return done(err);
+    });
+}
+
 async function uploadFilesFromWorkspaceToS3(
     client,
     workspace,
@@ -247,8 +258,7 @@ async function main(taskPayload, done) {
     try {
         actionType = await getActionType(actionName);
     } catch (err) {
-        console.error(err);
-        return done(err);
+        cleanExit(workspace, err, done);
     }
 
     // Get files from file storage service
@@ -260,16 +270,14 @@ async function main(taskPayload, done) {
         );
     } catch (err) {
         console.log('Error downloading files from S3');
-        console.error(err);
-        return done(err);
+        cleanExit(workspace, err, done);
     }
 
     if ('native' === actionType) {
         try {
             await triggerNativeAction(actionName, taskPayload.args, workspace);
         } catch (err) {
-            console.error(err);
-            return done(err);
+            cleanExit(workspace, err, done);
         }
     } else {
         try {
@@ -282,8 +290,7 @@ async function main(taskPayload, done) {
             );
         } catch (err) {
             console.log('Reporting docker action error to MMF api');
-            console.error(err);
-            return done(err);
+            cleanExit(workspace, err, done);
         }
     }
 
@@ -299,8 +306,7 @@ async function main(taskPayload, done) {
         );
     } catch (err) {
         console.log('Error uploading files to S3');
-        console.error(err);
-        return done(err);
+        cleanExit(workspace, err, done);
     }
 
 
