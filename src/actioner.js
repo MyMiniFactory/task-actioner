@@ -40,6 +40,10 @@ function getActionType(action) {
                 reject(err);
             }
             const actionListParsed = JSON.parse(data);
+            if (actionListParsed[action] == undefined){
+                reject('Action not supported');
+                return;
+            }
             resolve(actionListParsed[action].type);
         });
     });
@@ -232,9 +236,9 @@ async function main(taskPayload, done) {
     let workspace;
     try {
         workspace = await createWorkspace(taskPayload.outputFiles);
-    } catch (e) {
-        console.log(e);
-        return done();
+    } catch (err) {
+        console.log(err);
+        return done(err);
     }
 
     const actionName = taskPayload.action;
@@ -244,8 +248,7 @@ async function main(taskPayload, done) {
         actionType = await getActionType(actionName);
     } catch (err) {
         console.error(err);
-        console.log('Reporting error to MMF api');
-        return done();
+        return done(err);
     }
 
     // Get files from file storage service
@@ -258,7 +261,7 @@ async function main(taskPayload, done) {
     } catch (err) {
         console.log('Error downloading files from S3');
         console.error(err);
-        return done();
+        return done(err);
     }
 
     if ('native' === actionType) {
@@ -266,8 +269,7 @@ async function main(taskPayload, done) {
             await triggerNativeAction(actionName, taskPayload.args, workspace);
         } catch (err) {
             console.error(err);
-            console.log('Reporting error to MMF api');
-            return done();
+            return done(err);
         }
     } else {
         try {
@@ -281,7 +283,7 @@ async function main(taskPayload, done) {
         } catch (err) {
             console.log('Reporting docker action error to MMF api');
             console.error(err);
-            return done();
+            return done(err);
         }
     }
 
@@ -298,7 +300,7 @@ async function main(taskPayload, done) {
     } catch (err) {
         console.log('Error uploading files to S3');
         console.error(err);
-        return done();
+        return done(err);
     }
 
 
