@@ -59,7 +59,7 @@ class ConsumeCommand extends Command {
                             const payload = JSON.parse(msg.content);
                             actioner.run(payload, (err) => {
                                 if(err){
-                                    channel.reject(msg);
+                                    channel.nack(msg);
                                     console.log('action rejected');
                                     return;
                                 }

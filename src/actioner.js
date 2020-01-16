@@ -258,7 +258,7 @@ async function main(taskPayload, done) {
     try {
         actionType = await getActionType(actionName);
     } catch (err) {
-        cleanExit(workspace, err, done);
+        return cleanExit(workspace, err, done);
     }
 
     // Get files from file storage service
@@ -270,14 +270,14 @@ async function main(taskPayload, done) {
         );
     } catch (err) {
         console.log('Error downloading files from S3');
-        cleanExit(workspace, err, done);
+        return cleanExit(workspace, err, done);
     }
 
     if ('native' === actionType) {
         try {
             await triggerNativeAction(actionName, taskPayload.args, workspace);
         } catch (err) {
-            cleanExit(workspace, err, done);
+            return cleanExit(workspace, err, done);
         }
     } else {
         try {
@@ -290,7 +290,7 @@ async function main(taskPayload, done) {
             );
         } catch (err) {
             console.log('Reporting docker action error to MMF api');
-            cleanExit(workspace, err, done);
+            return cleanExit(workspace, err, done);
         }
     }
 
@@ -306,7 +306,7 @@ async function main(taskPayload, done) {
         );
     } catch (err) {
         console.log('Error uploading files to S3');
-        cleanExit(workspace, err, done);
+        return cleanExit(workspace, err, done);
     }
 
 
