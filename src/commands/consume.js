@@ -58,7 +58,7 @@ class ConsumeCommand extends Command {
                             console.log(' [x] Received %s', msg.content);
                             const payload = JSON.parse(msg.content);
                             actioner.run(payload, (err) => {
-                                if(err){
+                                if(err !== undefined){
                                     channel.nack(msg);
                                     console.log('action rejected');
                                     return;
