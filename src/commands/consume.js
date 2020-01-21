@@ -59,8 +59,10 @@ class ConsumeCommand extends Command {
                             const payload = JSON.parse(msg.content);
                             actioner.run(payload, (err) => {
                                 if(err !== undefined){
-                                    channel.nack(msg);
-                                    console.log('action rejected');
+                                    setTimeout(() => {                                        
+                                        channel.nack(msg);
+                                        console.log('action rejected');
+                                    }, 5000); // Delay to nack a failing task
                                     return;
                                 }
                                 console.log('action done');
