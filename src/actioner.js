@@ -29,6 +29,10 @@ async function createWorkspace(outputFiles) {
         path.join(workspace, 'results.json'),
         JSON.stringify(outputFiles)
     );
+    await fs.promises.writeFile(
+        path.join(workspace+'/output', 'status.json'),
+        JSON.stringify(outputFiles)
+    );
 
     return workspace;
 }
@@ -49,7 +53,7 @@ function getActionType(action) {
     });
 }
 
-function downloadFilesFromS3ToWorkspace(client, files, workspace) {
+function downloadFilesFromS3ToWorkspace(client, files, workspace, actionRename) {
     const downloads = files.map(
         file =>
             new Promise((resolve, reject) => {
@@ -58,11 +62,18 @@ function downloadFilesFromS3ToWorkspace(client, files, workspace) {
                         file.objectName.lastIndexOf('.') + 1,
                         file.objectName.length
                     ) || file.objectName;
-                const filePath = path.join(
-                    workspace,
-                    'input',
-                    uniqueString() + '.' + ext
-                );
+                    var filePath = path.join(
+                        workspace,
+                        'input',
+                        uniqueString() + '.' + ext
+                    );
+                if(false === actionRename) {
+                    filePath = path.join(
+                        workspace,
+                        'input',
+                        file.objectName.substring(file.objectName.lastIndexOf('/') + 1)
+                    );
+                }
                 client.fGetObject(
                     file.bucketName,
                     file.objectName,
@@ -266,7 +277,8 @@ async function main(taskPayload, done) {
         await downloadFilesFromS3ToWorkspace(
             minioClient,
             taskPayload.inputFiles,
-            workspace
+            workspace,
+            taskPayload.rename
         );
     } catch (err) {
         console.log('Error downloading files from S3');
