@@ -27,11 +27,11 @@ async function createWorkspace(outputFiles) {
     await fs.promises.mkdir(path.join(workspace, 'output'), {});
     await fs.promises.writeFile(
         path.join(workspace, 'results.json'),
-        JSON.stringify(outputFiles)
+        JSON.stringify([])
     );
     await fs.promises.writeFile(
         path.join(workspace+'/output', 'status.json'),
-        JSON.stringify(outputFiles)
+        JSON.stringify([])
     );
 
     return workspace;
@@ -111,7 +111,7 @@ async function sendTaskProgres(taskId, progress) {
     try {
         axios.patch(endpoint, requestData, requestConfig);
     } catch (err) {
-        console.error(err);
+        console.error('Error Patching Task: ', err);
         throw err;
     }
 }
@@ -320,7 +320,6 @@ async function main(taskPayload, done) {
         );
     } catch (err) {
         console.log('Error uploading files to S3');
-        return cleanExit(workspace, err, done);
     }
 
 
@@ -332,14 +331,7 @@ async function main(taskPayload, done) {
             console.log('Sending final progress to mmf');
             sendTaskProgres(taskPayload.id, JSON.parse(data));
 
-            rimraf(workspace, err => {
-                if (err) {
-                    console.error('Error deleting the workspace folder');
-                    console.error(err);
-                }
-                console.log('done');
-                return done();
-            });
+            return cleanExit(workspace, err, done);
         }
     });
 
