@@ -57,16 +57,17 @@ function downloadFilesFromS3ToWorkspace(client, files, workspace, actionRename) 
     const downloads = files.map(
         file =>
             new Promise((resolve, reject) => {
-                const ext =
+                let ext =
                     file.objectName.substring(
                         file.objectName.lastIndexOf('.') + 1,
                         file.objectName.length
                     ) || file.objectName;
-                    var filePath = path.join(
-                        workspace,
-                        'input',
-                        uniqueString() + '.' + ext
-                    );
+                ext = ext.toLowerCase();
+                var filePath = path.join(
+                    workspace,
+                    'input',
+                    uniqueString() + '.' + ext
+                );
                 if(false === actionRename) {
                     filePath = path.join(
                         workspace,
@@ -209,11 +210,12 @@ async function uploadFilesFromWorkspaceToS3(
         file =>
             new Promise((resolve, reject) => {
                 const filename = file.name;
-                const ext =
+                let ext =
                     filename.substring(
                         filename.lastIndexOf('.') + 1,
                         filename.length
                     ) || filename;
+                ext = ext.toLowerCase();
                 let objectName;
                 if (true === outputFilesPreDefined) {
                     objectName = s3Location.keyPrefix + '/' + filename;
