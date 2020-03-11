@@ -27,7 +27,7 @@ async function createWorkspace(outputFiles) {
     await fs.promises.mkdir(path.join(workspace, 'output'), {});
     await fs.promises.writeFile(
         path.join(workspace, 'results.json'),
-        JSON.stringify([])
+        JSON.stringify(outputFiles)
     );
     await fs.promises.writeFile(
         path.join(workspace+'/output', 'status.json'),
@@ -331,7 +331,8 @@ async function main(taskPayload, done) {
             console.log('Sending final progress to mmf');
             sendTaskProgres(taskPayload.id, JSON.parse(data));
 
-            return cleanExit(workspace, err, done);
+            // Successfully ack the task and remove the folder
+            return cleanExit(workspace, undefined, done);
         }
     });
 
