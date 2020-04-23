@@ -16,6 +16,27 @@ const rabbitMQ = {
     password: process.env.RABBITMQ_PASSWORD
 };
 
+const FAILED_TASK_RETRY_TIMES = process.env.FAILED_TASK_RETRY_TIMES !== undefined ?
+                                process.env.FAILED_TASK_RETRY_TIMES :
+                                5;
+const failedTaskList = {};
+                                
+function addToFailingList(payload) {
+    if (failedTaskList[payload.id] !== undefined) {
+        failedTaskList[payload.id] = failedTaskList[payload.id] + 1;
+    } else {
+        failedTaskList[payload.id] = 1;
+    }
+}
+
+function isFailedTooMuch(payload) {
+    if (failedTaskList[payload.id] >= FAILED_TASK_RETRY_TIMES) {
+        failedTaskList[payload.id] = 0; // Reset to 0 when cleared
+        return true;
+    }
+    return false;
+}
+
 class ConsumeCommand extends Command {
     async run() {
         const { flags } = this.parse(ConsumeCommand);
@@ -59,10 +80,15 @@ class ConsumeCommand extends Command {
                             const payload = JSON.parse(msg.content);
                             actioner.run(payload, (err) => {
                                 if(err !== undefined){
-                                    setTimeout(() => {                                        
-                                        channel.nack(msg);
-                                        console.log('action rejected');
-                                    }, 5000); // Delay to nack a failing task
+                                    addToFailingList(payload);
+                                    if (isFailedTooMuch(payload)) {
+                                        channel.nack(msg, false, false);
+                                    } else {
+                                        setTimeout(() => {
+                                            channel.nack(msg, false, true);
+                                            console.log('action rejected');
+                                        }, 5000); // Delay to nack a failing task
+                                    }
                                     return;
                                 }
                                 console.log('action done');

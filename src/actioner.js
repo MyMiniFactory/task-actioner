@@ -86,6 +86,7 @@ function downloadFilesFromS3ToWorkspace(client, files, workspace, actionRename) 
                         }
                         console.log(
                             'download ',
+                            file.bucketName,
                             file.objectName,
                             ' into ',
                             filePath
