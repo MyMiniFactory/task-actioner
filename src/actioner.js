@@ -19,6 +19,13 @@ const minioClient = new minio.Client({
     accessKey: process.env.FILE_STORAGE_ACCESS_KEY,
     secretKey: process.env.FILE_STORAGE_SECRET_KEY
 });
+const minioClient2 = new minio.Client({
+    endPoint: process.env.FILE_STORAGE2_HOST,
+    port: Number(process.env.FILE_STORAGE2_PORT),
+    useSSL: 'true' === process.env.FILE_STORAGE2_USE_SSL,
+    accessKey: process.env.FILE_STORAGE2_ACCESS_KEY,
+    secretKey: process.env.FILE_STORAGE2_SECRET_KEY
+});
 
 async function createWorkspace(outputFiles) {
     const randomString = uniqueString();
@@ -276,9 +283,16 @@ async function main(taskPayload, done) {
     }
 
     // Get files from file storage service
+
+    let storageClient = minioClient;
+    if (taskPayload.s3Location.objectCDNHost !== undefined &&
+        taskPayload.s3Location.objectCDNHost == minioClient2.endPoint){
+        storageClient = minioClient2;
+    }
+
     try {
         await downloadFilesFromS3ToWorkspace(
-            minioClient,
+            storageClient,
             taskPayload.inputFiles,
             workspace,
             taskPayload.rename
@@ -314,7 +328,7 @@ async function main(taskPayload, done) {
 
     try {
         await uploadFilesFromWorkspaceToS3(
-            minioClient,
+            storageClient,
             workspace,
             taskPayload.s3Location,
             outputFilesPreDefined
